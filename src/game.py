@@ -46,7 +46,6 @@ def beats(action):
         return "rock"
 
 def calculateMove(name, history):
-    print(history)
     #Rock: 0
     #Paper: 1
     #Scissors: 2
@@ -67,8 +66,10 @@ def calculateMove(name, history):
                 break
         except: pass
 
-    
     #Neural network here
+
+
+    
 
     #return "rock"
     return None
