@@ -1,14 +1,17 @@
 #py -m pip install --upgrade https://storage.googleapis.com/tensorflow/mac/cpu/tensorflow-1.12.0-py3-none-any.whl
 #C:\Users\nigel.quick\AppData\Local\Programs\Python\Python37-32\Lib\site-packages - local package location
-from sys import path
+from sys import path    #These modules are part of the python stdlib
 from json import dump, load
 from itertools import groupby
 try: 
     path.insert(0, './libs')    #Change running directory to the libs folder
-    from numpy import random as nprnd   #Non std lib, import from local
+    from numpy import random as nprnd   #Non stdlib, import from local file
 except ImportError:
-    print("Numpy was unable to be imported properly...")
-    input()
+    from tkinter import messagebox, Tk  #We do this because you can't see the console window
+    root = Tk()
+    root.withdraw()
+    messagebox.showinfo("Rock-Paper-Scissors", "Numpy was unable to be imported...")
+    quit()
 
 def queryName(num):
     '''Function to return the name of the action that corresponds to a number
@@ -29,7 +32,7 @@ def trainingData():
     '''
     with open("data-training.json") as f:
         data = load(f)
-    return [data[key] for key in data.keys()]
+    return [data[key] for key in data.keys()]   #Return all the values of the dict in a list
 
 def dumpHistory(name, history):
     '''Function to dump the current history to the json file
@@ -38,10 +41,10 @@ def dumpHistory(name, history):
     history -- the history to dump to the file
     '''
     with open("data.json") as f:
-        try:
+        try:    #Try/catch block, will catch if data.json empty
             data = load(f)
         except:
-            data = {}
+            data = {}   #Set data to be blank
     data[name] = history
     with open('data.json', 'w') as f:
         dump(data, f)
@@ -52,11 +55,11 @@ def loadHistory(name):
     name -- the name of the user to retrive the data from
     '''
     with open("data.json") as f:
-        try:
+        try:        #Try/catch block, will catch if data.json empty
             data = load(f)
             return data[name]
         except:
-            return []
+            return []   #If data.json is empty, return a blank list
         
 
 def beats(action):
@@ -96,31 +99,31 @@ def calculateMove(name, history):
                 break
         except: pass
 
-    #letters = history + trainingData()[0] + trainingData()[1] + trainingData()[2] + trainingData()[3] + trainingData()[4]
-    letters = history
-    for item in trainingData():
-        letters = letters + item
+    tmplist = []
+    for item in trainingData(): #Combine all the training data into the list
+        tmplist = tmplist + item
+    letters = tmplist + history
 
     for i in range(len(letters)):
-        if letters[i] == 0:
+        if letters[i] == 0: #Convert the numbers to letters (then i can use grouby and sort on them)
             letters[i] = "a"
         elif letters[i] == 1:
             letters[i] = "b"
         elif letters[i] == 2:
             letters[i] = "c"
 
-    groups = groupby(letters, key=lambda x: x[0])
-    predictions = [[a[0], sum (1 for _ in a[1])/float(len(letters))] for a in groups]
+    groups = groupby(letters, key=lambda x: x[0])   #Group the letters
+    predictions = [[a[0], sum (1 for _ in a[1])/float(len(letters))] for a in groups]   #This is the actual code that calculates the computer's next move
 
-    highest = 0
-    move =  "a"
+    highest = 0 #Var to store the highest certainty value
+    move =  "a" #The move the computer is going to make
     for i in range(len(predictions)):
-        if predictions[i][1] > highest:
+        if predictions[i][1] > highest: #Check if the certainty is higher than the saved one
             highest = predictions[i][1]
             move = predictions[i][0]
 
     if nprnd.choice([1, 2, 3, 4, 5], p=[0.2, 0.2, 0.2, 0.2, 0.2]) == 1: #Throw in a bit of random to switch things up
-        return nprnd.choice(["rock", "paper", "scissors"], p=[0.3, 0.4, 0.3]) 
+        return nprnd.choice(["rock", "paper", "scissors"], p=[0.3, 0.4, 0.3])               #Incase people start to catch on
     elif move == "a":
         return "rock"
     elif move == "b":
@@ -128,4 +131,4 @@ def calculateMove(name, history):
     elif move == "c":
         return "scissors"
     else:
-        return nprnd.choice(["rock", "paper", "scissors"], p=[0.3, 0.4, 0.3])   #Return random choice if something goes wrong
+        return nprnd.choice(["rock", "paper", "scissors"], p=[0.3, 0.4, 0.3])   #Return random choice if something goes wrong and computer hasn't made choice
