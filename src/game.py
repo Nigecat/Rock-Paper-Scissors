@@ -93,16 +93,17 @@ def calculateMove(name, history):
     #Else: (we don't need an else statement because return will stop the code)
     for i in range(len(history) - 1, -1, -1):   #Run through the history backwards
         try:
-            if history[i] == history[i - 1] and history[i - 1] == history[i - 2]:
+            if history[i] == history[i - 1] and history[i - 1]:# == history[i - 2]:
                 return beats(history[i])    #Check if the user is repeatedly playing the same action and play the counter
             else:
                 break
         except: pass
 
-    tmplist = []
+    letters = history
+    #tmplist = []
     for item in trainingData(): #Combine all the training data into the list
-        tmplist = tmplist + item
-    letters = tmplist + history
+        letters = letters + item
+    #letters = tmplist + history
 
     for i in range(len(letters)):
         if letters[i] == 0: #Convert the numbers to letters (then i can use grouby and sort on them)
@@ -122,8 +123,8 @@ def calculateMove(name, history):
             highest = predictions[i][1]
             move = predictions[i][0]
 
-    if nprnd.choice([1, 2, 3, 4, 5], p=[0.2, 0.2, 0.2, 0.2, 0.2]) == 1: #Throw in a bit of random to switch things up
-        return nprnd.choice(["rock", "paper", "scissors"], p=[0.3, 0.4, 0.3])               #Incase people start to catch on
+    if nprnd.choice([1, 2, 3, 4], p=[0.25, 0.25, 0.25, 0.25]) == 1: #Throw in a bit of random to switch things up
+        return nprnd.choice(["rock", "paper", "scissors"], p=[0.34, 0.32, 0.34])               #Incase people start to catch on
     elif move == "a":
         return "rock"
     elif move == "b":
@@ -131,4 +132,4 @@ def calculateMove(name, history):
     elif move == "c":
         return "scissors"
     else:
-        return nprnd.choice(["rock", "paper", "scissors"], p=[0.3, 0.4, 0.3])   #Return random choice if something goes wrong and computer hasn't made choice
+        return nprnd.choice(["rock", "paper", "scissors"], p=[0.34, 0.32, 0.34])   #Return random choice if something goes wrong and computer hasn't made choice

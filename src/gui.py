@@ -11,7 +11,7 @@ except ImportError:
     quit()
 from game import calculateMove, dumpHistory, loadHistory, queryName, beats  #Imports from game.py
 
-def updateGUI(winRate, playerMove, computerMove, msg):
+def updateGUI(winRate, playerMove, computerMove, msg, games):
     playerPath = ".\\images\\{}.gif".format(playerMove)
     computerPath = ".\\images\\{}.gif".format(computerMove)
     layout = [
@@ -23,7 +23,7 @@ def updateGUI(winRate, playerMove, computerMove, msg):
         [sg.Text("You play: {}".format(playerMove), background_color="white"), sg.Text("                          The computer plays: {}".format(computerMove), background_color="white")],
         [sg.ReadFormButton("", button_color=sg.TRANSPARENT_BUTTON, image_filename=playerPath), sg.Text("               vs                 ", background_color="white"),
             sg.ReadFormButton("", button_color=sg.TRANSPARENT_BUTTON, image_filename=computerPath), sg.Text("")],
-        [sg.Text(msg, background_color="white"), sg.Text("              Your win rate is: {}%".format(winRate), background_color="white")]
+        [sg.Text(msg, background_color="white"), sg.Text("Your win rate is: {}%, the number of games played is: {}".format(winRate, games), background_color="white")]
 
         #[sg.Text(gameAction)],
         #[sg.Text("Your win rate is {}%".format(winRate))]
@@ -99,9 +99,9 @@ def main():
             #print("Your lose rate: {}%".format(100 - (wins / len(games) * 100)))
             try:
                 #window.Hide()
-                window = updateGUI(wins / len(games) * 100, queryName(history[-1]), move, msg)
+                window = updateGUI(wins / len(games) * 100, queryName(history[-1]), move, msg, len(games))
             except ZeroDivisionError:
-                window = updateGUI(0, queryName(history[-1]), move, msg)
+                window = updateGUI(0, queryName(history[-1]), move, msg, len(games))
 
     dumpHistory(name, history)  #Run when the x is pressed
 
