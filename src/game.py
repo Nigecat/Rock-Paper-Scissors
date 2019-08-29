@@ -109,9 +109,9 @@ def calculateMove(name, history):
         elif letters[i] == 2:
             letters[i] = "c"
 
-    letter_groups = groupby(letters, key=lambda x: x[0])
+    groups = groupby(letters, key=lambda x: x[0])
+    predictions = [[a[0], sum (1 for _ in a[1])/float(len(letters))] for a in groups]
 
-    predictions = [[a[0], sum (1 for _ in a[1])/float(len(letters))] for a in letter_groups]
     highest = 0
     move =  "a"
     for i in range(len(predictions)):
