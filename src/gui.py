@@ -1,109 +1,147 @@
-#!/usr/bin/env python
-from sys import path
-try: 
-    path.insert(0, './libs')    #Change running directory to the libs folder
-    import PySimpleGUI as sg   #Non stdlib, import from local file
-except ImportError:
-    from tkinter import messagebox, Tk  #We do this because you can't see the console window
-    root = Tk()
-    root.withdraw()
-    messagebox.showinfo("Rock-Paper-Scissors", "PySimpleGUI was unable to be imported...")
-    quit()
-from game import calculateMove, dumpHistory, loadHistory, queryName, beats  #Imports from game.py
+from util import *     #Local import from util.py
+from game import *     #Local import from game.py
+from sys import exit
+from tkinter import *
 
-def updateGUI(winRate, playerMove, computerMove, msg, games):
-    playerPath = ".\\images\\{}.gif".format(playerMove)
-    computerPath = ".\\images\\{}.gif".format(computerMove)
-    layout = [
-        [sg.Menu([['Menu', ['Logout']]])],
-        [sg.ReadFormButton("r", button_color=sg.TRANSPARENT_BUTTON, image_filename=".\\images\\rock.gif"), sg.Text(""),
-            sg.ReadFormButton("p", button_color=sg.TRANSPARENT_BUTTON, image_filename=".\\images\\paper.gif"), sg.Text(""),
-            sg.ReadFormButton("s", button_color=sg.TRANSPARENT_BUTTON, image_filename=".\\images\\scissors.gif"), sg.Text("")],
-        [sg.Text("", background_color="white")],
-        [sg.Text("You play: {}".format(playerMove), background_color="white"), sg.Text("                          The computer plays: {}".format(computerMove), background_color="white")],
-        [sg.ReadFormButton("", button_color=sg.TRANSPARENT_BUTTON, image_filename=playerPath), sg.Text("               vs                 ", background_color="white"),
-            sg.ReadFormButton("", button_color=sg.TRANSPARENT_BUTTON, image_filename=computerPath), sg.Text("")],
-        [sg.Text(msg, background_color="white"), sg.Text("Your win rate is: {}%, the number of games played is: {}".format(winRate, games), background_color="white")]
+class getName:
+    def __init__(self, parent):
+        top = self.top = Toplevel(parent)
+        self.top.configure(background=BACKGROUND)
+        self.top.iconbitmap(r'.\\images\\icon.ico')
+        Label(top, text="Name:", bg=BACKGROUND).pack()
+        self.e = Entry(top, bg=BACKGROUND)
+        self.e.pack(padx=5)
+        b = Button(top, text="OK", bg=BACKGROUND, command=self.ok)
+        b.pack(pady=5)
 
-        #[sg.Text(gameAction)],
-        #[sg.Text("Your win rate is {}%".format(winRate))]
-    ]
-    #layout.append('sg.ReadFormButton("{}", button_color=sg.TRANSPARENT_BUTTON, image_filename=".\\images\\{}.gif"), sg.Text("")'.format(computerMove, computerMove))
-
-
-    return sg.Window('Rock-Paper-Scissors', background_color = "#fff").layout(layout) 
-
-def getName():
-    layout = [  
-        [sg.Text('Name: ', size = (10, 1)), sg.InputText()],        
-        [sg.Submit()], 
-        [sg.Text('(Please enter your real name, as it will improve your experience of the game)', size = (60, 1))]
-    ]
-    window = sg.Window('Rock-Paper-Scissors').Layout(layout)  
-    while True:
-        if window.Read()[0] == None:
-            return "guest"
-        name = window.Read()[1][0].lower().strip() 
+    def ok(self):
+        global name
+        name = self.e.get().lower().strip()
         if name != "":
-            try:
-                return name
-            finally:
-                window.Hide()
+            self.top.destroy()
 
-def main():
-    #name = getName()
-    name = "nigel"
-    history = loadHistory(name)
-    games = []
-    layout = [
-        [sg.Menu([['Menu', ['Logout']]])],
-        [sg.ReadFormButton("r", button_color=sg.TRANSPARENT_BUTTON, image_filename=".\\images\\rock.gif"), sg.Text(""),
-            sg.ReadFormButton("p", button_color=sg.TRANSPARENT_BUTTON, image_filename=".\\images\\paper.gif"), sg.Text(""),
-            sg.ReadFormButton("s", button_color=sg.TRANSPARENT_BUTTON, image_filename=".\\images\\scissors.gif"), sg.Text("")],
-    ]
 
-    window =  sg.Window('Rock-Paper-Scissors', background_color = "white", layout=layout)#, icon=r"images\\icon.ico")
-    while True:
-        event = window.Read()[0]
-        if event == None:
-            break
-        if event == "Logout":
-            name = getName()
-            history = loadHistory(name)
-            games = []
-        if event == "r" or event == "p" or event == "s":  
-            move = calculateMove(name, history) #Calculate move is a function from game.py
-            if event == "r": #This happens AFTER the computer makes it's move
-                history.append(0)
-            elif event == "p":
-                history.append(1)
-            elif event == "s":
-                history.append(2)
-            #print("You play {}. The computer plays {}. ".format(queryName(history[-1]), move))
-            if queryName(history[-1]) == move:
-                msg = "Draw!"
-            elif beats(queryName(history[-1])) != move:
-                games.append(1)
-                msg = "You win!"
-            else:
-                games.append(0)
-                msg = "You lose..."
-            wins = 0
-            for item in games:
-                if item == 1:
-                    wins += 1
-            #try:
-            #    print("Your win rate: {}%".format(wins / len(games) * 100))
-            #except ZeroDivisionError:
-            #    print("Your win rate: 0%")
-            #print("Your lose rate: {}%".format(100 - (wins / len(games) * 100)))
-            try:
-                #window.Hide()
-                window = updateGUI(wins / len(games) * 100, queryName(history[-1]), move, msg, len(games))
-            except ZeroDivisionError:
-                window = updateGUI(0, queryName(history[-1]), move, msg, len(games))
+class Window(Frame):
+    def __init__(self, root = None):
+        Frame.__init__(self, root)                
+        self.root = root
+        self.init_window()
 
-    dumpHistory(name, history)  #Run when the x is pressed
+    def init_window(self):  
+        self.root.title(TITLE)
+        self.root.configure(background=BACKGROUND)
+        self.root.geometry(dimensions(HEIGHT, WIDTH))
+        self.root.iconbitmap(r'.\\images\\icon.ico')
+
+        #These are all objects of self so I can referance them in other functions
+        self.menubar = Menu(root)  
+        self.menubar.add_command(label="Toggle Display Mode", command=self.toggleDisplay)  
+        self.menubar.add_command(label="Logout", command=self.logout)  
+        self.root.config(menu=self.menubar)  
+    
+        self.rockButton = Button(root, image=rockImage, text="Rock", bg=BACKGROUND, command=lambda : self.play("rock"))
+        self.rockButton.grid(row = 0, column = 0)
+        self.rockButton.image = rockImage
+        
+        self.paperButton = Button(root, image=paperImage, text="Paper", bg=BACKGROUND, command=lambda : self.play("paper"))
+        self.paperButton.grid(row = 0, column = 1)
+        self.paperButton.image = paperImage
+
+        self.scissorsButton = Button(root, image=scissorsImage, text="Scissors", bg=BACKGROUND, command=lambda : self.play("scissors"))
+        self.scissorsButton.grid(row = 0, column = 2)
+        self.scissorsButton.image = scissorsImage
+
+
+        self.playerButton = Button(root, image=blankImage, text=" ", bg=BACKGROUND)
+        self.playerButton.grid(row = 1, column = 0)
+        self.playerButton.image = blankImage
+
+        #self.filler = Button(root, image=blankImage, text=" ", bg=BACKGROUND)
+        #self.filler.grid(row = 1, column = 1)
+        #self.filler.image = blankImage
+        self.filler = Label(root, text="    vs    ", bg=BACKGROUND, font=("Courier", 20))
+        self.filler.grid(row = 1, column = 1)
+
+        self.computerButton = Button(root, image=blankImage, text=" ", bg=BACKGROUND)
+        self.computerButton.grid(row = 1, column = 2)
+        self.computerButton.image = blankImage
+
+        self.infoText = Label(root, text="UNDEFINED", bg=BACKGROUND)
+        self.infoText.grid(row = 2, column = 1)
+
+
+    def toggleDisplay(self):
+        pass
+
+    def logout(self):
+        self.root.withdraw()
+        popup = getName(root)
+        self.root.wait_window(popup.top)
+        self.root.deiconify()
+
+    def play(self, playerMove):
+        global history
+        computerMove = calculateMove(name, history)
+        history.append(queryNum(playerMove))
+
+        gameData[0] += 1
+        if playerMove == computerMove:
+            gameData[1] += 1    #Draw
+            msg = "Draw!"
+        elif beats(playerMove) != computerMove:
+            gameData[2] += 1    #Win
+            msg = "You Win!"
+        else:
+            gameData[3] += 1    #Lose
+            msg = "You lose..."
+
+        #print(gameData)
+        #print(history)
+        print(f"You play {playerMove}, the computer plays {computerMove}. {msg}")
+        print(f"You have won {round(gameData[2] / gameData[0] * 100, 2)}% of games | You have lost {round(gameData[3] / gameData[0] * 100, 2)}% of games | You have drawn {round(gameData[1] / gameData[0] * 100, 2)}% of games | You have played {gameData[0]} games")
+        print()
+
+        if playerMove == "rock":
+            self.playerButton["image"] = rockImage
+        elif playerMove == "paper":
+            self.playerButton["image"] = paperImage
+        elif playerMove == "scissors":
+            self.playerButton["image"] = scissorsImage
+
+        if computerMove == "rock":
+            self.computerButton["image"] = rockImage
+        elif computerMove == "paper":
+            self.computerButton["image"] = paperImage
+        elif computerMove == "scissors":
+            self.computerButton["image"] = scissorsImage
+
+        #self.infoText["text"] = f"You have won {gameData[2] / gameData[0] * 100}% of games | You have lost {gameData[3] / gameData[0] * 100}% of games | You have drawn {gameData[1] / gameData[0] * 100}% of games | {gameData[0]} total games"
 
 if __name__ == '__main__':
-    main()
+    #Var setup
+    WHITE = RGB(255, 255, 255)
+    BACKGROUND = WHITE
+    HEIGHT = 460
+    WIDTH = 610
+    TITLE = "Rock-Paper-Scissors"
+    #name = "guest"
+    name = "nigel"
+    gameData = [0, 0, 0, 0] #Stores (in-order) | total games, draws, wins, loses
+
+    root = Tk()
+
+    blankImage = loadImage("blank.gif")
+    rockImage = loadImage("rock.gif")
+    paperImage = loadImage("paper.gif")
+    scissorsImage = loadImage("scissors.gif")
+
+    app = Window(root)
+
+    #root.withdraw()
+    #popup = getName(root)
+    #root.wait_window(popup.top)
+    #root.deiconify()
+    history = loadHistory(name)
+
+    root.protocol("WM_DELETE_WINDOW", lambda : [dumpHistory(name, history), exit()])
+    root.mainloop()  

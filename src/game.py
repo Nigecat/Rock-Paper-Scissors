@@ -1,17 +1,7 @@
-#py -m pip install --upgrade https://storage.googleapis.com/tensorflow/mac/cpu/tensorflow-1.12.0-py3-none-any.whl
-#C:\Users\nigel.quick\AppData\Local\Programs\Python\Python37-32\Lib\site-packages - local package location
-from sys import path    #These modules are part of the python stdlib
+from random import randint
 from json import dump, load
 from itertools import groupby
-try: 
-    path.insert(0, './libs')    #Change running directory to the libs folder
-    from numpy import random as nprnd   #Non stdlib, import from local file
-except ImportError:
-    from tkinter import messagebox, Tk  #We do this because you can't see the console window
-    root = Tk()
-    root.withdraw()
-    messagebox.showinfo("Rock-Paper-Scissors", "Numpy was unable to be imported...")
-    quit()
+from random import choices as rndchoice
 
 def queryName(num):
     '''Function to return the name of the action that corresponds to a number
@@ -25,14 +15,31 @@ def queryName(num):
     elif num == 2:
         return "scissors"
 
-def trainingData():
+def queryNum(action):
+    '''Function to return the number of the action that corresponds to a name
+
+    action -- the action to get the number of
+    '''
+    if action == "rock":
+        return 0
+    elif action == "paper":
+        return 1
+    elif action == "scissors":
+        return 2
+
+def trainingData(*files):
     '''Function to retrive the training data
 
-    Pulls data from data-training.json, returns a list of all the keys
+    Pulls data from file.json, returns a list of all the values, can take multiple files as input
     '''
-    with open("data-training.json") as f:
-        data = load(f)
-    return [data[key] for key in data.keys()]   #Return all the values of the dict in a list
+
+    files = [".\\data\\" + item for item in files]
+
+    data = {}
+    for file in files:
+        with open(file) as f:
+            data = {**data, **load(f)}
+    return [data[key] for key in data.keys()]   #Return all the values of the dicts in a list
 
 def dumpHistory(name, history):
     '''Function to dump the current history to the json file
@@ -40,26 +47,28 @@ def dumpHistory(name, history):
     name -- name of the user to dump the data to
     history -- the history to dump to the file
     '''
-    with open("data.json") as f:
-        try:    #Try/catch block, will catch if data.json empty
-            data = load(f)
-        except:
-            data = {}   #Set data to be blank
-    data[name] = history
-    with open('data.json', 'w') as f:
-        dump(data, f)
+    if name != "guest":
+        with open(".\\data\\data-user.json") as f:
+            try:    #Try/catch block, will catch if data-user.json empty
+                data = load(f)
+            except:
+                data = {}   #Set data to be blank
+        data[name] = history
+        with open(".\\data\\data-user.json", "w") as f:
+            dump(data, f)
 
 def loadHistory(name):
     '''Function to load the history of a user from the json file
 
     name -- the name of the user to retrive the data from
     '''
-    with open("data.json") as f:
-        try:        #Try/catch block, will catch if data.json empty
-            data = load(f)
-            return data[name]
-        except:
-            return []   #If data.json is empty, return a blank list
+    if name != "guest":
+        with open(".\\data\\data-user.json") as f:
+            try:        #Try/catch block, will catch if data-use.json empty
+                data = load(f)
+                return data[name]
+            except:
+                return []   #If data-use.json is empty, return a blank list
         
 
 def beats(action):
@@ -88,43 +97,47 @@ def calculateMove(name, history):
     if len(history) == 0:   #If the history is blank (then we have no data)
         #Pick a random option, this is weighted random because statistically, people play rock on the first turn. 
         #So we have paper as most likely, the others are there in case people catch on (to switch things up).
-        return nprnd.choice(["rock", "paper", "scissors"], p=[0.2, 0.6, 0.2]) 
+        return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=[0.3, 0.4, 0.3]))
 
     #Else: (we don't need an else statement because return will stop the code)
     for i in range(len(history) - 1, -1, -1):   #Run through the history backwards
         try:
-            if history[i] == history[i - 1] and history[i - 1]:# == history[i - 2]:
-                return beats(history[i])    #Check if the user is repeatedly playing the same action and play the counter
+            if history[i] == history[i - 1]:# == history[i - 2]:
+                if randint(0, 1) == 1:
+                    if history[i] == history[i - 1] == history[i - 2]:
+                        return beats(history[i])    #Check if the user is repeatedly playing the same action and play the counter
+                else:
+                    return beats(history[i])
             else:
                 break
         except: pass
 
-    letters = history
-    #tmplist = []
-    for item in trainingData(): #Combine all the training data into the list
-        letters = letters + item
-    #letters = tmplist + history
+    data = []
+    for item in trainingData("data-training.json", "data-training-study.json"): 
+        data = data + item     
 
-    for i in range(len(letters)):
-        if letters[i] == 0: #Convert the numbers to letters (then i can use grouby and sort on them)
-            letters[i] = "a"
-        elif letters[i] == 1:
-            letters[i] = "b"
-        elif letters[i] == 2:
-            letters[i] = "c"
+    for i in range(len(data)):
+        if data[i] == 0: #Convert the numbers to letters (then i can use grouby and sort on them)
+            data[i] = "a"
+        elif data[i] == 1:
+            data[i] = "b"
+        elif data[i] == 2:
+            data[i] = "c"
 
-    groups = groupby(letters, key=lambda x: x[0])   #Group the letters
-    predictions = [[a[0], sum (1 for _ in a[1])/float(len(letters))] for a in groups]   #This is the actual code that calculates the computer's next move
+    groups = groupby(data, key=lambda x: x[0])   #Group the letters
+    predictions = [[a[0], sum (1 for _ in a[1]) / float(len(data))] for a in groups]   #This is the actual code that calculates the computer's next move
+
+    #print(predictions)     #TODO: Write code to show individual percentages
 
     highest = 0 #Var to store the highest certainty value
-    move =  "a" #The move the computer is going to make
+    move = "a" #The move the computer is going to make
     for i in range(len(predictions)):
         if predictions[i][1] > highest: #Check if the certainty is higher than the saved one
             highest = predictions[i][1]
             move = predictions[i][0]
 
-    if nprnd.choice([1, 2, 3, 4], p=[0.25, 0.25, 0.25, 0.25]) == 1: #Throw in a bit of random to switch things up
-        return nprnd.choice(["rock", "paper", "scissors"], p=[0.34, 0.32, 0.34])               #Incase people start to catch on
+    if ''.join(rndchoice(["1", "2", "3", "4"], [0.25, 0.25, 0.25, 0.25])) == "1": #Throw in a bit of random to switch things up
+        return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=[0.33,  0.34, 0.33]) )              #Incase people start to catch on
     elif move == "a":
         return "rock"
     elif move == "b":
@@ -132,4 +145,4 @@ def calculateMove(name, history):
     elif move == "c":
         return "scissors"
     else:
-        return nprnd.choice(["rock", "paper", "scissors"], p=[0.34, 0.32, 0.34])   #Return random choice if something goes wrong and computer hasn't made choice
+        return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=[0.33,  0.34, 0.33]))   #Return random choice if something goes wrong and computer hasn't made choice
