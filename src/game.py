@@ -1,6 +1,6 @@
 from random import randint
 from json import dump, load
-from numpy import array, int8   #External library
+#from numpy import array, int8   #External library
 from itertools import groupby, chain
 from random import choices as rndchoice
 
@@ -41,8 +41,9 @@ def trainingData(*files):
         with open(file) as f:
             data = {**data, **load(f)}
 
-    data = list(chain.from_iterable([data[key] for key in data.keys()]))
-    return array(data, dtype=int8)   #Return all the values of the dicts in a list
+    #data = list(chain.from_iterable([data[key] for key in data.keys()]))
+    #return array(data, dtype=int8)   #Return all the values of the dicts in a list, store them as 8 bit integers
+    return [data[key] for key in data.keys()]
 
 def dumpHistory(name, history):
     '''Function to dump the current history to the json file
@@ -99,18 +100,13 @@ def calculateMove(name, history):
 
     if len(history) == 0:   #If the history is blank (then we have no data)
         #Pick a random option, this is weighted random because statistically, people play rock on the first turn. 
-        #So we have paper as most likely, the others are there in case people catch on (to switch things up).
         return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=[0.3, 0.4, 0.3]))
 
     #Else: (we don't need an else statement because return will stop the code)
     for i in range(len(history) - 1, -1, -1):   #Run through the history backwards
         try:
-            if history[i] == history[i - 1]:# == history[i - 2]:
-                if randint(0, 1) == 1:
-                    if history[i] == history[i - 1] == history[i - 2]:
-                        return beats(history[i])    #Check if the user is repeatedly playing the same action and play the counter
-                else:
-                    return beats(history[i])
+            if history[i] == history[i - 1] == history[i - 2]:
+                return beats(history[i])    #Check if the user is repeatedly playing the same action and play the counter
             else:
                 break
         except: pass
@@ -119,6 +115,29 @@ def calculateMove(name, history):
     for item in trainingData("data-training.json", "data-training-study.json"): 
         data = data + item     
 
+    #data = data + history
+
+
+    search = []
+    history.reverse()
+    try:
+        search.append(history[0])
+        search.append(history[1])
+        search.append(history[2])
+    except IndexError:
+        history.reverse()
+        return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=[0.33, 0.34, 0.33]))
+    finally:
+        history.reverse()
+        search.reverse()
+ 
+    print(search)
+
+    return "rock"
+
+
+
+    '''
     for i in range(len(data)):
         if data[i] == 0: #Convert the numbers to letters (then i can use grouby and sort on them)
             data[i] = "a"
@@ -130,10 +149,23 @@ def calculateMove(name, history):
     groups = groupby(data, key=lambda x: x[0])   #Group the letters
     predictions = [[a[0], sum (1 for _ in a[1]) / float(len(data))] for a in groups]   #This is the actual code that calculates the computer's next move
 
-    #print(predictions)     #TODO: Write code to show individual percentages
+    letters = [item[0] for item in predictions]
+    certainty = [item[1] for item in predictions]
+
+    a, b, c = (0, 0, 0)
+    for i in range(len(letters)):
+        if letters[i] == "a":
+            a += certainty[i]
+        elif letters[i] == "b":
+            b += certainty[i]
+        elif letters[i] == "c":
+            c += certainty[i]
+    predictions = [["a", a], ["b", b], ["c", c]]
+
+    print(f"Rock: {round(a * 100, 2)}% | Paper: {round(b * 100, 2)}% | Scissors: {round(c * 100, 2)}%")
 
     highest = 0 #Var to store the highest certainty value
-    move = "a" #The move the computer is going to make
+    move = None #The move the computer is going to make
     for i in range(len(predictions)):
         if predictions[i][1] > highest: #Check if the certainty is higher than the saved one
             highest = predictions[i][1]
@@ -148,4 +180,5 @@ def calculateMove(name, history):
     elif move == "c":
         return "scissors"
     else:
-        return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=[0.33,  0.34, 0.33]))   #Return random choice if something goes wrong and computer hasn't made choice
+        return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=[0.33,  0.34, 0.33]))   #Return random choice if something goes wrong and computer hasn't made choice (this should never happen)
+    '''
