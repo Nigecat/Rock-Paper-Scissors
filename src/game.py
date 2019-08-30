@@ -1,6 +1,7 @@
 from random import randint
 from json import dump, load
-from itertools import groupby
+from numpy import array, int8   #External library
+from itertools import groupby, chain
 from random import choices as rndchoice
 
 def queryName(num):
@@ -39,7 +40,9 @@ def trainingData(*files):
     for file in files:
         with open(file) as f:
             data = {**data, **load(f)}
-    return [data[key] for key in data.keys()]   #Return all the values of the dicts in a list
+
+    data = list(chain.from_iterable([data[key] for key in data.keys()]))
+    return array(data, dtype=int8)   #Return all the values of the dicts in a list
 
 def dumpHistory(name, history):
     '''Function to dump the current history to the json file

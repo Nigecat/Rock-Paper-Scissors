@@ -56,9 +56,6 @@ class Window(Frame):
         self.playerButton.grid(row = 1, column = 0)
         self.playerButton.image = blankImage
 
-        #self.filler = Button(root, image=blankImage, text=" ", bg=BACKGROUND)
-        #self.filler.grid(row = 1, column = 1)
-        #self.filler.image = blankImage
         self.filler = Label(root, text="    vs    ", bg=BACKGROUND, font=("Courier", 20))
         self.filler.grid(row = 1, column = 1)
 
