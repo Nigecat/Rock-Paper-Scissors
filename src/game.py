@@ -1,7 +1,6 @@
 from random import randint
 from json import dump, load
 #from numpy import array, int8   #External library
-from itertools import groupby, chain
 from random import choices as rndchoice
 
 def queryName(num):
@@ -113,72 +112,43 @@ def calculateMove(name, history):
 
     data = []
     for item in trainingData("data-training.json", "data-training-study.json"): 
-        data = data + item     
+        data = data + item      #Load the data into a list
 
     #data = data + history
 
-
-    search = []
-    history.reverse()
+    search = [] #Var to store the characters to search for
+    history.reverse()   #Reverse history, because in python it is faster to referance the start of the list than the end
     try:
-        search.append(history[0])
-        search.append(history[1])
+        search.append(history[0])   #Grab the first 4 entries of the list (that latest 4 moves)
+        search.append(history[1])       #This will return a IndexError if history is too short
         search.append(history[2])
+        search.append(history[3])
     except IndexError:
-        history.reverse()
+        history.reverse()   #Put history back to how it was and return a random response
         return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=[0.33, 0.34, 0.33]))
     finally:
-        history.reverse()
-        search.reverse()
- 
-    print(search)
+        history.reverse()   #Put history back to normal
+        search.reverse()    #Put search back the right way round
 
-    return "rock"
+    predictions = []    #List to store the predictions of the user's next move
+    for i in range(len(data)):  #Run through all the input data
+        try:
+            if data[i] == search[0] and data[i + 1] == search[1] and data[i + 2] == search[2] and data[i + 3] == search[3]:
+                predictions.append(data[i + 4]) #Check if any patterns match and add the next move to the predictions
+        except IndexError:
+            break
 
+    rock = predictions.count(0) #Count the total of each move
+    paper = predictions.count(1)
+    scissors = predictions.count(2)
+    total = rock + paper + scissors
 
+    print(f"Rock: {round((rock / total) * 100, 2)}% | Paper: {round((paper / total) * 100, 2)}% | Scissors: {round((scissors / total) * 100, 2)}%")
 
-    '''
-    for i in range(len(data)):
-        if data[i] == 0: #Convert the numbers to letters (then i can use grouby and sort on them)
-            data[i] = "a"
-        elif data[i] == 1:
-            data[i] = "b"
-        elif data[i] == 2:
-            data[i] = "c"
-
-    groups = groupby(data, key=lambda x: x[0])   #Group the letters
-    predictions = [[a[0], sum (1 for _ in a[1]) / float(len(data))] for a in groups]   #This is the actual code that calculates the computer's next move
-
-    letters = [item[0] for item in predictions]
-    certainty = [item[1] for item in predictions]
-
-    a, b, c = (0, 0, 0)
-    for i in range(len(letters)):
-        if letters[i] == "a":
-            a += certainty[i]
-        elif letters[i] == "b":
-            b += certainty[i]
-        elif letters[i] == "c":
-            c += certainty[i]
-    predictions = [["a", a], ["b", b], ["c", c]]
-
-    print(f"Rock: {round(a * 100, 2)}% | Paper: {round(b * 100, 2)}% | Scissors: {round(c * 100, 2)}%")
-
-    highest = 0 #Var to store the highest certainty value
-    move = None #The move the computer is going to make
-    for i in range(len(predictions)):
-        if predictions[i][1] > highest: #Check if the certainty is higher than the saved one
-            highest = predictions[i][1]
-            move = predictions[i][0]
-
-    if ''.join(rndchoice(["1", "2", "3", "4"], [0.25, 0.25, 0.25, 0.25])) == "1": #Throw in a bit of random to switch things up
-        return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=[0.33,  0.34, 0.33]) )              #Incase people start to catch on
-    elif move == "a":
-        return "rock"
-    elif move == "b":
-        return "paper"
-    elif move == "c":
-        return "scissors"
-    else:
-        return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=[0.33,  0.34, 0.33]))   #Return random choice if something goes wrong and computer hasn't made choice (this should never happen)
-    '''
+    #Return what beats the highest prediction for what the user will play
+    if rock > paper and rock > scissors:
+        return beats("rock")
+    elif paper > rock and paper > scissors:
+        return beats("paper")
+    elif scissors > rock and scissors > paper:
+        return beats("scissors")
