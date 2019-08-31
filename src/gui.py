@@ -123,7 +123,7 @@ if __name__ == '__main__':
     TITLE = "Rock-Paper-Scissors"
     #name = "guest"
     name = "nigel"
-    gameData = [0, 0, 0, 0] #Stores (in-order) | total games, draws, wins, loses
+    gameData = [0, 0, 0, 0] #Stores: [total games, draws, wins, loses]
 
     root = Tk()
 
