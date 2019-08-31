@@ -1,7 +1,7 @@
-from util import *     #Local import from util.py
-from game import *     #Local import from game.py
 from sys import exit
-from tkinter import *
+#from tkinter import *  # ^^ same here
+from tkinter import PhotoImage, Toplevel, Label, Button, Entry, Frame, Menu, Tk
+from game import queryName, queryNum, calculateMove, dumpHistory, loadHistory, beats  #Local import from game.py
 
 class getName:
     def __init__(self, parent):
@@ -30,7 +30,7 @@ class Window(Frame):
     def init_window(self):  
         self.root.title(TITLE)
         self.root.configure(background=BACKGROUND)
-        self.root.geometry(dimensions(HEIGHT, WIDTH))
+        self.root.geometry("{}x{}".format(WIDTH, HEIGHT))
         self.root.iconbitmap(r'.\\images\\icon.ico')
 
         #These are all objects of self so I can referance them in other functions
@@ -116,7 +116,7 @@ class Window(Frame):
 
 if __name__ == '__main__':
     #Var setup
-    WHITE = RGB(255, 255, 255)
+    WHITE = '#%02x%02x%02x' % (255, 255, 255)   #RGB to hex
     BACKGROUND = WHITE
     HEIGHT = 460
     WIDTH = 610
@@ -127,6 +127,7 @@ if __name__ == '__main__':
 
     root = Tk()
 
+    loadImage = lambda file: PhotoImage(file=".\\images\\{}".format(file))  #Since I only use this a few times locally, there is no point in making it an actual function
     blankImage = loadImage("blank.gif")
     rockImage = loadImage("rock.gif")
     paperImage = loadImage("paper.gif")

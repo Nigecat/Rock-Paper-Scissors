@@ -1,7 +1,17 @@
-from random import randint
 from json import dump, load
-#from numpy import array, int8   #External library
 from random import choices as rndchoice
+
+def rndmove(**args):
+    '''Function to return a random move
+
+    args -- arguments for the functions, if the population is left blank. It will default to (rock, paper, scissors)
+    '''
+    if "population" in args.keys() and "weights" in args.keys():
+        return ''.join(rndchoice(population=args["population"], weights=args["weights"]))
+    elif "weights" in args.keys() and "population" not in args.keys():
+        return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=args["weights"]))
+    else:
+        return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=[0.333, 0.334, 0.333])) 
 
 def queryName(num):
     '''Function to return the name of the action that corresponds to a number
@@ -41,7 +51,7 @@ def trainingData(*files):
             data = {**data, **load(f)}
 
     #data = list(chain.from_iterable([data[key] for key in data.keys()]))
-    #return array(data, dtype=int8)   #Return all the values of the dicts in a list, store them as 8 bit integers
+    #return array(data, dtype=int8)   #Though a numpy array might be faster, made no difference to run times (also stores ints as 8 bit integers).
     return [data[key] for key in data.keys()]
 
 def dumpHistory(name, history):
@@ -67,11 +77,11 @@ def loadHistory(name):
     '''
     if name != "guest":
         with open(".\\data\\data-user.json") as f:
-            try:        #Try/catch block, will catch if data-use.json empty
+            try:        #Try/catch block, will catch if data-user.json empty
                 data = load(f)
                 return data[name]
             except:
-                return []   #If data-use.json is empty, return a blank list
+                return []   #If data-user.json is empty, return a blank list
         
 
 def beats(action):
@@ -86,6 +96,8 @@ def beats(action):
     elif action == 2 or action == "scissors":
         return "rock"
 
+
+
 def calculateMove(name, history):
     '''Function to calculate the computer's move
 
@@ -97,9 +109,9 @@ def calculateMove(name, history):
         Scissors: 2
     '''
 
-    if len(history) == 0:   #If the history is blank (then we have no data)
+    if len(history) < 4:   #If the history is blank (then we have no data) or under 4
         #Pick a random option, this is weighted random because statistically, people play rock on the first turn. 
-        return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=[0.3, 0.4, 0.3]))
+        return rndmove(weights=[0.3, 0.4, 0.3])
 
     #Else: (we don't need an else statement because return will stop the code)
     for i in range(len(history) - 1, -1, -1):   #Run through the history backwards
@@ -124,8 +136,8 @@ def calculateMove(name, history):
         search.append(history[2])
         search.append(history[3])
     except IndexError:
-        history.reverse()   #Put history back to how it was and return a random response
-        return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=[0.33, 0.34, 0.33]))
+        history.reverse()   #Put history back to how it was and return a random move
+        return rndmove()
     finally:
         history.reverse()   #Put history back to normal
         search.reverse()    #Put search back the right way round
@@ -137,18 +149,42 @@ def calculateMove(name, history):
                 predictions.append(data[i + 4]) #Check if any patterns match and add the next move to the predictions
         except IndexError:
             break
+        
+    for i in range(len(history)):  #Run through all the input data (same but for history (since that has a higher weighting))
+        try:
+            if history[i] == search[0] and history[i + 1] == search[1] and history[i + 2] == search[2] and history[i + 3] == search[3]:
+                #These have 300x more weight than the pattern matching from the input data
+                #predictions.append(history[i + 4]) #Check if any patterns match and add the next move to the predictions
+                predictions = predictions + [history[i + 4]] * 300
+        except IndexError:
+            break
 
     rock = predictions.count(0) #Count the total of each move
     paper = predictions.count(1)
     scissors = predictions.count(2)
-    total = rock + paper + scissors
+    total = rock + paper + scissors #This if for calculating percentages
 
-    print(f"Rock: {round((rock / total) * 100, 2)}% | Paper: {round((paper / total) * 100, 2)}% | Scissors: {round((scissors / total) * 100, 2)}%")
+    #Convert the totals to percentages (certainty)
+    getPercent = lambda count, total: round((count / total) * 100, 2)
+    rock = getPercent(rock, total)
+    paper = getPercent(paper, total)
+    scissors = getPercent(scissors, total)
 
-    #Return what beats the highest prediction for what the user will play
-    if rock > paper and rock > scissors:
-        return beats("rock")
-    elif paper > rock and paper > scissors:
-        return beats("paper")
-    elif scissors > rock and scissors > paper:
-        return beats("scissors")
+    print(f"Rock: {rock}% | Paper: {paper}% | Scissors: {scissors}% | Data pulled from {total} samples")
+
+    close = lambda num1, num2, dif: abs(num1 - num2) <= dif
+    DIFFERENCE = 3  #Difference between percentages for it to pick randomly
+    if close(rock, paper, DIFFERENCE):  #Check if any of the predictions are close, and if they are return one of them randomly (to make it less predictable)
+        return rndmove(weights=[0.5, 0.5, 0])
+    elif close(rock, scissors, DIFFERENCE):
+        return rndmove(weights=[0.5, 0, 0.5])
+    elif close(paper, scissors, DIFFERENCE):
+        return rndmove(weights=[0, 0.5, 0.5])
+    else:   #If none of them are close
+        #Return what beats the highest prediction for what the user will play
+        if rock > paper and rock > scissors:
+            return beats("rock")
+        elif paper > rock and paper > scissors:
+            return beats("paper")
+        elif scissors > rock and scissors > paper:
+            return beats("scissors")
