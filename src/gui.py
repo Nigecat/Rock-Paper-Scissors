@@ -1,5 +1,4 @@
 from sys import exit
-#from tkinter import *  # ^^ same here
 from tkinter import PhotoImage, Toplevel, Label, Button, Entry, Frame, Menu, Tk
 from game import queryName, queryNum, calculateMove, dumpHistory, loadHistory, beats  #Local import from game.py
 
