@@ -1,6 +1,11 @@
+#from game import *     #VSCode hates wildcard import and literaly throws hundreds of errors at the unused functions
 from sys import exit
+#from tkinter import *      # ^^ Same as above, I will uncomment these before submitting if I remember
 from tkinter import PhotoImage, Toplevel, Label, Button, Entry, Frame, Menu, Tk
 from game import queryName, queryNum, calculateMove, dumpHistory, loadHistory, beats  #Local import from game.py
+
+def loadImage(file):
+    return PhotoImage(file=".\\images\\{}".format(file))
 
 class getName:
     def __init__(self, parent):
@@ -19,12 +24,14 @@ class getName:
         if name != "":
             self.top.destroy()
 
-
 class Window(Frame):
     def __init__(self, root = None):
         Frame.__init__(self, root)                
         self.root = root
+        self.root.protocol("WM_DELETE_WINDOW", lambda : [dumpHistory(name, self.history), exit()])
+        self.history = loadHistory(name)
         self.init_window()
+        self.init_gameInfo()
 
     def init_window(self):  
         self.root.title(TITLE)
@@ -32,42 +39,99 @@ class Window(Frame):
         self.root.geometry("{}x{}".format(WIDTH, HEIGHT))
         self.root.iconbitmap(r'.\\images\\icon.ico')
 
+        self.blankImage = loadImage("blank.gif")
+        self.rockImage = loadImage("rock.gif")
+        self.paperImage = loadImage("paper.gif")
+        self.scissorsImage = loadImage("scissors.gif")
+
         #These are all objects of self so I can referance them in other functions
-        self.menubar = Menu(root)  
+        self.simpleImages = True
+        self.showStats = False
+
+        self.menubar = Menu(self.root)  
         self.menubar.add_command(label="Toggle Display Mode", command=self.toggleDisplay)  
+        self.menubar.add_command(label="Toggle Interesting Stats", command=self.toggleStats)  
         self.menubar.add_command(label="Logout", command=self.logout)  
         self.root.config(menu=self.menubar)  
     
-        self.rockButton = Button(root, image=rockImage, text="Rock", bg=BACKGROUND, command=lambda : self.play("rock"))
+        self.rockButton = Button(self.root, image=self.rockImage, text="Rock", bg=BACKGROUND, command=lambda : self.play("rock"))
         self.rockButton.grid(row = 0, column = 0)
-        self.rockButton.image = rockImage
+        self.rockButton.image = self.rockImage
         
-        self.paperButton = Button(root, image=paperImage, text="Paper", bg=BACKGROUND, command=lambda : self.play("paper"))
+        self.paperButton = Button(self.root, image=self.paperImage, text="Paper", bg=BACKGROUND, command=lambda : self.play("paper"))
         self.paperButton.grid(row = 0, column = 1)
-        self.paperButton.image = paperImage
+        self.paperButton.image = self.paperImage
 
-        self.scissorsButton = Button(root, image=scissorsImage, text="Scissors", bg=BACKGROUND, command=lambda : self.play("scissors"))
+        self.scissorsButton = Button(self.root, image=self.scissorsImage, text="Scissors", bg=BACKGROUND, command=lambda : self.play("scissors"))
         self.scissorsButton.grid(row = 0, column = 2)
-        self.scissorsButton.image = scissorsImage
+        self.scissorsButton.image = self.scissorsImage
 
 
-        self.playerButton = Button(root, image=blankImage, text=" ", bg=BACKGROUND)
+        self.playerButton = Button(self.root, image=self.blankImage, text=" ", bg=BACKGROUND)
         self.playerButton.grid(row = 1, column = 0)
-        self.playerButton.image = blankImage
+        self.playerButton.image = self.blankImage
 
-        self.filler = Label(root, text="    vs    ", bg=BACKGROUND, font=("Courier", 20))
+        self.filler = Label(self.root, text="    vs    ", bg=BACKGROUND, font=("Courier", 20))
         self.filler.grid(row = 1, column = 1)
 
-        self.computerButton = Button(root, image=blankImage, text=" ", bg=BACKGROUND)
+        self.computerButton = Button(self.root, image=self.blankImage, text=" ", bg=BACKGROUND)
         self.computerButton.grid(row = 1, column = 2)
-        self.computerButton.image = blankImage
+        self.computerButton.image = self.blankImage
 
-        self.infoText = Label(root, text="UNDEFINED", bg=BACKGROUND)
-        self.infoText.grid(row = 2, column = 1)
+    def init_gameInfo(self):
+        self.master = Tk()
+        self.master.title(TITLE)
+        self.master.configure(background=BACKGROUND)
+        self.master.geometry("1600x100+800+400")
+        self.master.iconbitmap(r'.\\images\\icon.ico')
 
+        self.line1 = Label(self.master, text=" ", font=("Courier", FONTSIZE))
+        self.line1.pack()
+
+        self.line2 = Label(self.master, text=" ", font=("Courier", FONTSIZE))
+        self.line2.pack()
+
+        self.master.protocol("WM_DELETE_WINDOW", lambda : [dumpHistory(name, self.history), exit()])
+        self.master.mainloop()  
+
+    def toggleStats(self):
+        self.showStats = not self.showStats
 
     def toggleDisplay(self):
-        pass
+        self.simpleImages = not self.simpleImages
+
+        if self.simpleImages:
+            self.rockImage = loadImage("rock.gif")
+            self.paperImage = loadImage("paper.gif")
+            self.scissorsImage = loadImage("scissors.gif")
+        else:
+            self.rockImage = loadImage("rock_real.gif")
+            #self.paperImage = loadImage("paper_real.gif")
+            self.scissorsImage = loadImage("scissors_real.gif")
+
+        self.rockButton = Button(self.root, image=self.rockImage, text="Rock", bg=BACKGROUND, command=lambda : self.play("rock"))
+        self.rockButton.grid(row = 0, column = 0)
+        self.rockButton.image = self.rockImage
+        
+        #self.paperButton = Button(self.root, image=self.paperImage, text="Paper", bg=BACKGROUND, command=lambda : self.play("paper"))
+        #self.paperButton.grid(row = 0, column = 1)
+        #self.paperButton.image = self.paperImage
+
+        self.scissorsButton = Button(self.root, image=self.scissorsImage, text="Scissors", bg=BACKGROUND, command=lambda : self.play("scissors"))
+        self.scissorsButton.grid(row = 0, column = 2)
+        self.scissorsButton.image = self.scissorsImage
+
+
+        self.playerButton = Button(self.root, image=self.blankImage, text=" ", bg=BACKGROUND)
+        self.playerButton.grid(row = 1, column = 0)
+        self.playerButton.image = self.blankImage
+
+        self.filler = Label(self.root, text="    vs    ", bg=BACKGROUND, font=("Courier", 20))
+        self.filler.grid(row = 1, column = 1)
+
+        self.computerButton = Button(self.root, image=self.blankImage, text=" ", bg=BACKGROUND)
+        self.computerButton.grid(row = 1, column = 2)
+        self.computerButton.image = self.blankImage
 
     def logout(self):
         self.root.withdraw()
@@ -76,69 +140,75 @@ class Window(Frame):
         self.root.deiconify()
 
     def play(self, playerMove):
-        global history
-        computerMove = calculateMove(name, history)
-        history.append(queryNum(playerMove))
+        computerMove = calculateMove(name, self.history)    #Call function for the computer to make it's move
+
+        self.history.append(queryNum(playerMove))        #Adds to history AFTER computer makes it's move
 
         gameData[0] += 1
         if playerMove == computerMove:
             gameData[1] += 1    #Draw
             msg = "Draw!"
+            self.filler["background"] = YELLOW
+            self.root.configure(background=YELLOW)        
         elif beats(playerMove) != computerMove:
             gameData[2] += 1    #Win
-            msg = "You Win!"
+            msg = "You win!"
+            self.filler["background"] = GREEN
+            self.root.configure(background=GREEN)
         else:
             gameData[3] += 1    #Lose
             msg = "You lose..."
-
-        #print(gameData)
-        #print(history)
-        print(f"You play {playerMove}, the computer plays {computerMove}. {msg}")
-        print(f"You have won {round(gameData[2] / gameData[0] * 100, 2)}% of games | You have lost {round(gameData[3] / gameData[0] * 100, 2)}% of games | You have drawn {round(gameData[1] / gameData[0] * 100, 2)}% of games | You have played {gameData[0]} games")
-        print()
+            self.filler["background"] = RED
+            self.root.configure(background=RED)
 
         if playerMove == "rock":
-            self.playerButton["image"] = rockImage
+            self.playerButton["image"] = self.rockImage
         elif playerMove == "paper":
-            self.playerButton["image"] = paperImage
+            self.playerButton["image"] = self.paperImage
         elif playerMove == "scissors":
-            self.playerButton["image"] = scissorsImage
+            self.playerButton["image"] = self.scissorsImage
 
         if computerMove == "rock":
-            self.computerButton["image"] = rockImage
+            self.computerButton["image"] = self.rockImage
         elif computerMove == "paper":
-            self.computerButton["image"] = paperImage
+            self.computerButton["image"] = self.paperImage
         elif computerMove == "scissors":
-            self.computerButton["image"] = scissorsImage
+            self.computerButton["image"] = self.scissorsImage        
 
-        #self.infoText["text"] = f"You have won {gameData[2] / gameData[0] * 100}% of games | You have lost {gameData[3] / gameData[0] * 100}% of games | You have drawn {gameData[1] / gameData[0] * 100}% of games | {gameData[0]} total games"
+        self.updateInfo(f"You play {playerMove}, the computer plays {computerMove}. {msg}", f"You have won {round(gameData[2] / gameData[0] * 100, 2)}% of games | You have lost {round(gameData[3] / gameData[0] * 100, 2)}% of games | You have drawn {round(gameData[1] / gameData[0] * 100, 2)}% of games | You have played {gameData[0]} games")
 
-if __name__ == '__main__':
+    def updateInfo(self, *lines):
+        self.line1.destroy()
+        self.line2.destroy()
+
+        self.line1 = Label(self.master, text=lines[0], font=("Courier", FONTSIZE))
+        self.line1.pack()
+
+        self.line2 = Label(self.master, text=lines[1], font=("Courier", FONTSIZE))
+        self.line2.pack()
+
+if __name__ == "__main__":
     #Var setup
-    WHITE = '#%02x%02x%02x' % (255, 255, 255)   #RGB to hex
+    RGB = lambda red, green, blue: "#%02x%02x%02x" % (red, green, blue)   #RGB to hex
+    WHITE = RGB(255, 255, 255)
     BACKGROUND = WHITE
-    HEIGHT = 460
+    RED = RGB(255, 0, 0)
+    YELLOW = RGB(255, 255, 0)
+    GREEN = RGB(46, 204, 64)
+    HEIGHT = 431
     WIDTH = 610
     TITLE = "Rock-Paper-Scissors"
+    FONTSIZE = 16
     #name = "guest"
     name = "nigel"
     gameData = [0, 0, 0, 0] #Stores: [total games, draws, wins, loses]
 
     root = Tk()
-
-    loadImage = lambda file: PhotoImage(file=".\\images\\{}".format(file))  #Since I only use this a few times locally, there is no point in making it an actual function
-    blankImage = loadImage("blank.gif")
-    rockImage = loadImage("rock.gif")
-    paperImage = loadImage("paper.gif")
-    scissorsImage = loadImage("scissors.gif")
-
     app = Window(root)
 
     #root.withdraw()
     #popup = getName(root)
     #root.wait_window(popup.top)
     #root.deiconify()
-    history = loadHistory(name)
 
-    root.protocol("WM_DELETE_WINDOW", lambda : [dumpHistory(name, history), exit()])
     root.mainloop()  

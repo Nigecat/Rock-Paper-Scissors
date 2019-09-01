@@ -60,6 +60,7 @@ def dumpHistory(name, history):
     name -- name of the user to dump the data to
     history -- the history to dump to the file
     '''
+    history = list(history)
     if name != "guest":
         with open(".\\data\\data-user.json") as f:
             try:    #Try/catch block, will catch if data-user.json empty
@@ -68,7 +69,7 @@ def dumpHistory(name, history):
                 data = {}   #Set data to be blank
         data[name] = history
         with open(".\\data\\data-user.json", "w") as f:
-            dump(data, f)
+            dump(data, f, indent=4)
 
 def loadHistory(name):
     '''Function to load the history of a user from the json file
@@ -79,9 +80,9 @@ def loadHistory(name):
         with open(".\\data\\data-user.json") as f:
             try:        #Try/catch block, will catch if data-user.json empty
                 data = load(f)
-                return data[name]
+                return bytearray(data[name])    #Bytearray will increase the run speed
             except:
-                return []   #If data-user.json is empty, return a blank list
+                return bytearray([])   #If data-user.json is empty, return a blank list
         
 
 def beats(action):
@@ -155,7 +156,10 @@ def calculateMove(name, history):
             if history[i] == search[0] and history[i + 1] == search[1] and history[i + 2] == search[2] and history[i + 3] == search[3]:
                 #These have 300x more weight than the pattern matching from the input data
                 #predictions.append(history[i + 4]) #Check if any patterns match and add the next move to the predictions
-                predictions = predictions + [history[i + 4]] * 300
+                if history[i + 4] == 0:
+                    predictions = predictions + [history[i + 4]] * 600  #Weighting for rock is heigher
+                else:
+                    predictions = predictions + [history[i + 4]] * 300
         except IndexError:
             break
 
