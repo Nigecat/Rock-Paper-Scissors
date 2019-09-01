@@ -85,10 +85,10 @@ class Window(Frame):
         self.master.geometry("1600x100+800+400")
         self.master.iconbitmap(r'.\\images\\icon.ico')
 
-        self.line1 = Label(self.master, text=" ", font=("Courier", FONTSIZE))
+        self.line1 = Label(self.master, text=" ", font=("Courier", FONTSIZE), bg=BACKGROUND)
         self.line1.pack()
 
-        self.line2 = Label(self.master, text=" ", font=("Courier", FONTSIZE))
+        self.line2 = Label(self.master, text=" ", font=("Courier", FONTSIZE), bg=BACKGROUND)
         self.line2.pack()
 
         self.master.protocol("WM_DELETE_WINDOW", lambda : [dumpHistory(name, self.history), exit()])
@@ -181,24 +181,24 @@ class Window(Frame):
         self.line1.destroy()
         self.line2.destroy()
 
-        self.line1 = Label(self.master, text=lines[0], font=("Courier", FONTSIZE))
+        self.line1 = Label(self.master, text=lines[0], font=("Courier", FONTSIZE), bg=BACKGROUND)
         self.line1.pack()
 
-        self.line2 = Label(self.master, text=lines[1], font=("Courier", FONTSIZE))
+        self.line2 = Label(self.master, text=lines[1], font=("Courier", FONTSIZE), bg=BACKGROUND)
         self.line2.pack()
 
 if __name__ == "__main__":
     #Var setup
     RGB = lambda red, green, blue: "#%02x%02x%02x" % (red, green, blue)   #RGB to hex
     WHITE = RGB(255, 255, 255)
-    BACKGROUND = WHITE
     RED = RGB(255, 0, 0)
     YELLOW = RGB(255, 255, 0)
     GREEN = RGB(46, 204, 64)
+    BACKGROUND = WHITE
     HEIGHT = 431
     WIDTH = 610
     TITLE = "Rock-Paper-Scissors"
-    FONTSIZE = 16
+    FONTSIZE = 12
     #name = "guest"
     name = "nigel"
     gameData = [0, 0, 0, 0] #Stores: [total games, draws, wins, loses]

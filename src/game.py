@@ -37,10 +37,10 @@ def queryNum(action):
     elif action == "scissors":
         return 2
 
-def trainingData(*files):
+def trainingData(*files, **args):
     '''Function to retrive the training data
 
-    Pulls data from file.json, returns a list of all the values, can take multiple files as input
+    Pulls data from file.json, returns a list of all the values, can take multiple files as input, can ignore certain keys
     '''
 
     files = [".\\data\\" + item for item in files]
@@ -50,8 +50,8 @@ def trainingData(*files):
         with open(file) as f:
             data = {**data, **load(f)}
 
-    #data = list(chain.from_iterable([data[key] for key in data.keys()]))
-    #return array(data, dtype=int8)   #Though a numpy array might be faster, made no difference to run times (also stores ints as 8 bit integers).
+    data.pop(args["ignore"], None)
+    #bytearray()   #Bytearray will increase the run speed
     return [data[key] for key in data.keys()]
 
 def dumpHistory(name, history):
@@ -60,7 +60,6 @@ def dumpHistory(name, history):
     name -- name of the user to dump the data to
     history -- the history to dump to the file
     '''
-    history = list(history)
     if name != "guest":
         with open(".\\data\\data-user.json") as f:
             try:    #Try/catch block, will catch if data-user.json empty
@@ -80,9 +79,9 @@ def loadHistory(name):
         with open(".\\data\\data-user.json") as f:
             try:        #Try/catch block, will catch if data-user.json empty
                 data = load(f)
-                return bytearray(data[name])    #Bytearray will increase the run speed
+                return data[name]  
             except:
-                return bytearray([])   #If data-user.json is empty, return a blank list
+                return []   #If data-user.json is empty, return a blank list
         
 
 def beats(action):
@@ -124,7 +123,7 @@ def calculateMove(name, history):
         except: pass
 
     data = []
-    for item in trainingData("data-training.json", "data-training-study.json"): 
+    for item in trainingData("data-input.json", ignore="results"): 
         data = data + item      #Load the data into a list
 
     #data = data + history
