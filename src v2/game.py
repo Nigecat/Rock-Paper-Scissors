@@ -37,10 +37,10 @@ def queryNum(action):
     elif action == "scissors":
         return 2
 
-def trainingData(*files, **args):
-    '''Function to retrive the training data
+def sampleData(*files, **args):
+    '''Function to retrive the sample (input) data
 
-    Pulls data from file.json, returns a list of all the values, can take multiple files as input, can ignore certain keys
+    Pulls data from [files.json], returns a list of all the values, can take multiple files as input, can ignore certain keys
     '''
 
     files = [".\\data\\" + item for item in files]
@@ -53,7 +53,7 @@ def trainingData(*files, **args):
     for item in args["ignore"]:
         data.pop(item, None)
     #bytearray(utf-8)   #Bytearray will increase the run speed (hypothetically, in reality - it doesn't work)
-    return [data[key] for key in data.keys()]
+    return [data[key] for key in data.keys()][0]
 
 def dumpData(name, **data):
     '''Function to dump the current data to the json file
@@ -109,4 +109,67 @@ def calculateMove(name, playerHistory, computerHistory, results):
         Scissors: 2
     '''
 
-    # TODO Re-write this entire thing
+    if len(playerHistory) < 4:   #If the history is blank (then we have no data) or under 4
+        #Pick a random option, this is weighted random because statistically, people play rock on the first turn. 
+        return rndmove(weights=[0.3, 0.4, 0.3])
+
+    #Else: (we don't need an else statement because return will stop the code)
+    for i in range(len(playerHistory) - 1, -1, -1):   #Run through the playerHistory backwards
+        try:
+            if playerHistory[i] == playerHistory[i - 1] == playerHistory[i - 2]:
+                return beats(playerHistory[i])    #Check if the user is repeatedly playing the same action and play the counter
+            else:
+                break
+        except: pass
+
+    sampleHistoryOne = sampleData("data-input.json", ignore=["playerTwo", "results"])
+    sampleHistoryTwo = sampleData("data-input.json", ignore=["playerOne", "results"])
+    sampleResults = sampleData("data-input.json", ignore=["playerOne", "playerTwo"])
+
+    predictions = []
+
+    CHECK_RANGE = 3
+    try:
+        if len(playerHistory) >= CHECK_RANGE:
+            for i in range(len(sampleHistoryOne)):
+                for j in range(len(playerHistory)):
+                    for x in range(1, CHECK_RANGE + 1):
+                        if sampleHistoryOne[i + x] == playerHistory[j + x] and sampleHistoryTwo[i + x] == computerHistory[j + x] and sampleResults[i + x] == results[j + x]:
+                            if x == CHECK_RANGE:
+                                predictions.append(sampleHistoryOne[i + x + 1])
+                        else:
+                            break
+    except IndexError: pass
+
+    if predictions == []:
+        return rndmove()
+
+    rock = predictions.count(0) #Count the total of each move
+    paper = predictions.count(1)
+    scissors = predictions.count(2)
+    total = rock + paper + scissors #This if for calculating percentages
+
+    #Convert the totals to percentages (certainty)
+    getPercent = lambda count, total: round((count / total) * 100, 2)
+    rock = getPercent(rock, total)
+    paper = getPercent(paper, total)
+    scissors = getPercent(scissors, total)
+
+    print(f"Predictions: Rock: {rock}% | Paper: {paper}% | Scissors: {scissors}% | Data pulled from {total} samples")
+
+    close = lambda num1, num2, dif: abs(num1 - num2) <= dif
+    DIFFERENCE = 3  #Difference between percentages for it to pick randomly
+    if close(rock, paper, DIFFERENCE):  #Check if any of the predictions are close, and if they are return one of them randomly (to make it less predictable)
+        return rndmove(weights=[0.5, 0.5, 0])
+    elif close(rock, scissors, DIFFERENCE):
+        return rndmove(weights=[0.5, 0, 0.5])
+    elif close(paper, scissors, DIFFERENCE):
+        return rndmove(weights=[0, 0.5, 0.5])
+    else:   #If none of them are close
+        #Return what beats the highest prediction for what the user will play
+        if rock > paper and rock > scissors:
+            return beats("rock")
+        elif paper > rock and paper > scissors:
+            return beats("paper")
+        elif scissors > rock and scissors > paper:
+            return beats("scissors")
