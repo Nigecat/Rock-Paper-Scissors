@@ -1,8 +1,9 @@
 #from game import *     #VSCode hates wildcard import and literaly throws hundreds of errors at the unused functions
 from sys import exit
 #from tkinter import *      # ^^ Same as above, I will uncomment these before submitting if I remember
+#from threading import Thread
 from tkinter import PhotoImage, Toplevel, Label, Button, Entry, Frame, Menu, Tk
-from game import queryName, queryNum, calculateMove, dumpData, loadData, beats  #Local import from game.py
+from game import queryName, queryNum, calculateMove, dumpData, loadData, beats, setTimer  #Local import from game.py
 
 def loadImage(file):
     return PhotoImage(file=".\\images\\{}".format(file))
@@ -116,16 +117,16 @@ class Window(Frame):
             self.scissorsImage = loadImage("scissors.gif")
         else:
             self.rockImage = loadImage("rock_real.gif")
-            #self.paperImage = loadImage("paper_real.gif")
+            self.paperImage = loadImage("paper_real.gif")
             self.scissorsImage = loadImage("scissors_real.gif")
 
         self.rockButton = Button(self.root, image=self.rockImage, text="Rock", bg=BACKGROUND, command=lambda : self.play("rock"))
         self.rockButton.grid(row = 0, column = 0)
         self.rockButton.image = self.rockImage
         
-        #self.paperButton = Button(self.root, image=self.paperImage, text="Paper", bg=BACKGROUND, command=lambda : self.play("paper"))
-        #self.paperButton.grid(row = 0, column = 1)
-        #self.paperButton.image = self.paperImage
+        self.paperButton = Button(self.root, image=self.paperImage, text="Paper", bg=BACKGROUND, command=lambda : self.play("paper"))
+        self.paperButton.grid(row = 0, column = 1)
+        self.paperButton.image = self.paperImage
 
         self.scissorsButton = Button(self.root, image=self.scissorsImage, text="Scissors", bg=BACKGROUND, command=lambda : self.play("scissors"))
         self.scissorsButton.grid(row = 0, column = 2)
@@ -150,7 +151,13 @@ class Window(Frame):
         self.root.deiconify()
 
     def play(self, playerMove):
+        timer = setTimer()
+        timer.start()
+        
         computerMove = calculateMove(name, self.playerHistory, self.computerHistory, self.results)    #Call function for the computer to make it's move
+        
+        timer.stop()
+        print(f"Elapsed time: {timer.totalTime}\n")
 
         self.playerHistory.append(queryNum(playerMove))        #Adds to history AFTER computer makes it's move
         self.computerHistory.append(queryNum(computerMove))

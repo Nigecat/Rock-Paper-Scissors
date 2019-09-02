@@ -1,5 +1,19 @@
 from json import dump, load
+from time import process_time
 from random import choices as rndchoice
+
+class setTimer(object):
+    def __init__(self):
+        self.startTime = 0
+        self.stopTime = 0
+        self.totalTime = 0
+
+    def start(self):
+        self.startTime = process_time()
+
+    def stop(self):
+        self.stopTime = process_time()
+        self.totalTime = self.stopTime - self.startTime
 
 def rndmove(**args):
     '''Function to return a random move
@@ -52,7 +66,7 @@ def sampleData(*files, **args):
 
     for item in args["ignore"]:
         data.pop(item, None)
-    #bytearray(utf-8)   #Bytearray will increase the run speed (hypothetically, in reality - it doesn't work)
+    #bytearray(utf-8)   #Bytearray will increase the run speed (hypothetically, in reality - I can't get it to work)
     return [data[key] for key in data.keys()][0]
 
 def dumpData(name, **data):
@@ -129,19 +143,17 @@ def calculateMove(name, playerHistory, computerHistory, results):
     predictions = []
 
     CHECK_RANGE = 3
-    try:
-        if len(playerHistory) >= CHECK_RANGE:
-            for i in range(len(sampleHistoryOne)):
-                for j in range(len(playerHistory)):
-                    for x in range(1, CHECK_RANGE + 1):
-                        if sampleHistoryOne[i + x] == playerHistory[j + x] and sampleHistoryTwo[i + x] == computerHistory[j + x] and sampleResults[i + x] == results[j + x]:
-                            if x == CHECK_RANGE:
-                                predictions.append(sampleHistoryOne[i + x + 1])
-                        else:
-                            break
-    except IndexError: pass
+    if len(playerHistory) >= CHECK_RANGE:
+        for i in range(len(sampleHistoryOne) - CHECK_RANGE):
+            for j in range(len(playerHistory) - CHECK_RANGE):
+                for x in range(1, CHECK_RANGE + 1):
+                    if sampleHistoryOne[i + x] == playerHistory[j + x] and sampleHistoryTwo[i + x] == computerHistory[j + x] and sampleResults[i + x] == results[j + x]:
+                        if x == CHECK_RANGE:
+                            predictions.append(sampleHistoryOne[i + x + 1])
+                    else:
+                        break
 
-    if predictions == []:
+    if predictions == []:   #If it can't make any predictions return a random move
         return rndmove()
 
     rock = predictions.count(0) #Count the total of each move
