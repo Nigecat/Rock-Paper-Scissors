@@ -47,11 +47,11 @@ class Window(Frame):
 
         #These are all objects of self so I can referance them in other functions (these are the interface widgets)
         self.simpleImages = True
-        self.showStats = False
+        self.showInfo = True
 
         self.menubar = Menu(self.root)  
         self.menubar.add_command(label="Toggle Display Mode", command=self.toggleDisplay)  
-        self.menubar.add_command(label="Toggle Interesting Stats", command=self.toggleStats)  
+        self.menubar.add_command(label="Toggle Interesting Info", command=self.toggleInfo)  
         self.menubar.add_command(label="Logout", command=self.logout)  
         self.root.config(menu=self.menubar)  
     
@@ -104,8 +104,8 @@ class Window(Frame):
         self.master.protocol("WM_DELETE_WINDOW", lambda : [dumpData(name, playerHistory=self.playerHistory, computerHistory=self.computerHistory, results=self.results), exit()])
         self.master.mainloop()  
 
-    def toggleStats(self):
-        self.showStats = not self.showStats
+    def toggleInfo(self):
+        self.showInfo = not self.showInfo
         # TODO Implement this
 
     def toggleDisplay(self):
@@ -157,7 +157,8 @@ class Window(Frame):
         computerMove = calculateMove(name, self.playerHistory, self.computerHistory, self.results)    #Call function for the computer to make it's move
         
         timer.stop()
-        print(f"Elapsed time: {timer.totalTime}\n")
+        if self.showInfo:
+            print(f"Elapsed time: {timer.totalTime}\n")
 
         self.playerHistory.append(queryNum(playerMove))        #Adds to history AFTER computer makes it's move
         self.computerHistory.append(queryNum(computerMove))

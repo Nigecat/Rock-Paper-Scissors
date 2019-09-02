@@ -140,9 +140,13 @@ def calculateMove(name, playerHistory, computerHistory, results):
     sampleHistoryTwo = sampleData("data-input.json", ignore=["playerOne", "results"])
     sampleResults = sampleData("data-input.json", ignore=["playerOne", "playerTwo"])
 
+    CHECK_RANGE = 3
+
     predictions = []
 
-    CHECK_RANGE = 3
+    searchStrPlayer = [playerHistory[i] for i in range(len(playerHistory) - 1, len(playerHistory) - CHECK_RANGE - 1,-1) ]
+    searchStrComputer = [computerHistory[i] for i in range(len(computerHistory) - 1, len(computerHistory) - CHECK_RANGE - 1,-1) ]
+
     if len(playerHistory) >= CHECK_RANGE:
         for i in range(len(sampleHistoryOne) - CHECK_RANGE):
             for j in range(len(playerHistory) - CHECK_RANGE):
