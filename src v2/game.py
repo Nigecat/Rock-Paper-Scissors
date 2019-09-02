@@ -20,9 +20,7 @@ def rndmove(**args):
 
     args -- arguments for the functions, if the population is left blank. It will default to (rock, paper, scissors)
     '''
-    if "population" in args.keys() and "weights" in args.keys():
-        return ''.join(rndchoice(population=args["population"], weights=args["weights"]))
-    elif "weights" in args.keys() and "population" not in args.keys():
+    if "weights" in args.keys():
         return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=args["weights"]))
     else:
         return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=[0.333, 0.334, 0.333])) 
@@ -51,11 +49,13 @@ def queryNum(action):
     elif action == "scissors":
         return 2
 
-def sampleData(*files, **args):
+def sampleData(key, **files):
     '''Function to retrive the sample (input) data
 
     Pulls data from [files.json], returns a list of all the values, can take multiple files as input, can ignore certain keys
     '''
+
+    files = files["files"]
 
     files = [".\\data\\" + item for item in files]
 
@@ -64,10 +64,11 @@ def sampleData(*files, **args):
         with open(file) as f:
             data = {**data, **load(f)}
 
-    for item in args["ignore"]:
-        data.pop(item, None)
-    #bytearray(utf-8)   #Bytearray will increase the run speed (hypothetically, in reality - I can't get it to work)
-    return [data[key] for key in data.keys()][0]
+    if key == None:
+        return [data[key] for key in data.keys()]
+    else:
+        return data[key]
+
 
 def dumpData(name, **data):
     '''Function to dump the current data to the json file
@@ -110,7 +111,7 @@ def beats(action):
 
 
 
-def calculateMove(name, playerHistory, computerHistory, results):
+def calculateMove(name, playerHistory, computerHistory, results, sampleHistoryOne, sampleHistoryTwo, sampleResults):
     '''Function to calculate the computer's move
 
     name -- the name of the user playing
@@ -123,7 +124,9 @@ def calculateMove(name, playerHistory, computerHistory, results):
         Scissors: 2
     '''
 
-    if len(playerHistory) < 4:   #If the history is blank (then we have no data) or under 4
+    CHECK_RANGE = 3 #Basically a difficulty setting (lower = easier)
+
+    if len(playerHistory) < CHECK_RANGE:   #If the history is blank (then we have no data) or under the check range
         #Pick a random option, this is weighted random because statistically, people play rock on the first turn. 
         return rndmove(weights=[0.3, 0.4, 0.3])
 
@@ -134,31 +137,45 @@ def calculateMove(name, playerHistory, computerHistory, results):
                 return beats(playerHistory[i])    #Check if the user is repeatedly playing the same action and play the counter
             else:
                 break
-        except: pass
+        except IndexError: pass
 
-    sampleHistoryOne = sampleData("data-input.json", ignore=["playerTwo", "results"])
-    sampleHistoryTwo = sampleData("data-input.json", ignore=["playerOne", "results"])
-    sampleResults = sampleData("data-input.json", ignore=["playerOne", "playerTwo"])
-
-    CHECK_RANGE = 3
+    searchPlayer = []
+    searchComputer = []
+    searchResults = []
+    playerHistory.reverse()  #It's faster to work from the start of the list
+    computerHistory.reverse()
+    results.reverse()
+    for i in range(CHECK_RANGE):    #This isn't the most line efficient way to do it, but it means I only have to loop through the list once (to decrease runtime length)
+        searchPlayer.append(playerHistory[i])
+        searchComputer.append(computerHistory[i])
+        searchResults.append(results[i])
+    playerHistory.reverse() 
+    computerHistory.reverse()
+    results.reverse()
+    searchPlayer.reverse()
+    searchComputer.reverse()
+    searchResults.reverse()
 
     predictions = []
+    for i in range(len(results) - CHECK_RANGE):
+        add = True
+        for x in range(len(searchResults)):
+            if playerHistory[i + x] == searchPlayer[x] and computerHistory[i + x] == searchComputer[x] and results[i + x] == searchResults[x]:
+                continue
+            else:
+                add = False
+        if add:     #Patterns from the user's history are weighted 300 times more heavily than the other data
+            predictions = predictions + [sampleHistoryTwo[i + CHECK_RANGE]] * 300
 
-    searchStrPlayer = [playerHistory[i] for i in range(len(playerHistory) - 1, len(playerHistory) - CHECK_RANGE - 1,-1)]
-    searchStrComputer = [computerHistory[i] for i in range(len(computerHistory) - 1, len(computerHistory) - CHECK_RANGE - 1,-1)]
-    searchStrResults = [results[i] for i in range(len(results) - 1, len(results) - CHECK_RANGE - 1,-1)]
-
-    if len(playerHistory) >= CHECK_RANGE:
-        for i in range(len(sampleHistoryOne) - CHECK_RANGE):
-            for x in range(CHECK_RANGE):
-                if sampleHistoryOne[i + x] == searchStrPlayer[x] and sampleHistoryTwo[i + x] == searchStrComputer[x] and sampleResults[i + x] == searchStrResults[x]:
-                    if x == CHECK_RANGE:
-                        predictions.append(sampleHistoryOne[i + x + 1])
-                else:
-                    break
-
-    if predictions == []:   #If it can't make any predictions return a random move
-        return rndmove()
+    for i in range(len(sampleResults) - CHECK_RANGE):
+        add = True
+        for x in range(len(searchResults)):
+            if sampleHistoryOne[i + x] == searchPlayer[x] and sampleHistoryTwo[i + x] == searchComputer[x] and sampleResults[i + x] == searchResults[x]:
+                continue
+            else:
+                add = False
+        if add:
+            predictions = predictions + [sampleHistoryTwo[i + CHECK_RANGE]]
 
     rock = predictions.count(0) #Count the total of each move
     paper = predictions.count(1)
@@ -176,11 +193,11 @@ def calculateMove(name, playerHistory, computerHistory, results):
     close = lambda num1, num2, dif: abs(num1 - num2) <= dif
     DIFFERENCE = 3  #Difference between percentages for it to pick randomly
     if close(rock, paper, DIFFERENCE):  #Check if any of the predictions are close, and if they are return one of them randomly (to make it less predictable)
-        return rndmove(weights=[0.5, 0.5, 0])
+        return rndmove(weights=[0.0, 0.5, 0.5])
     elif close(rock, scissors, DIFFERENCE):
-        return rndmove(weights=[0.5, 0, 0.5])
+        return rndmove(weights=[0.5, 0.5, 0])
     elif close(paper, scissors, DIFFERENCE):
-        return rndmove(weights=[0, 0.5, 0.5])
+        return rndmove(weights=[0.5, 0, 0.5])
     else:   #If none of them are close
         #Return what beats the highest prediction for what the user will play
         if rock > paper and rock > scissors:
@@ -189,3 +206,9 @@ def calculateMove(name, playerHistory, computerHistory, results):
             return beats("paper")
         elif scissors > rock and scissors > paper:
             return beats("scissors")
+        else:
+            return rndmove()    #Incase something goes wrong
+
+if __name__ == '__main__':  #If you run this file, redirect you to the other file
+    from os import system
+    system("gui.py")

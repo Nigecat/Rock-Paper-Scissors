@@ -1,9 +1,7 @@
-#from game import *     #VSCode hates wildcard import and literaly throws hundreds of errors at the unused functions
+from game import *     
 from sys import exit
-#from tkinter import *      # ^^ Same as above, I will uncomment these before submitting if I remember
-#from threading import Thread
+#from tkinter import *   #VSCode hates wildcard import and literaly throws hundreds of errors at the unused functions
 from tkinter import PhotoImage, Toplevel, Label, Button, Entry, Frame, Menu, Tk
-from game import queryName, queryNum, calculateMove, dumpData, loadData, beats, setTimer  #Local import from game.py
 
 def loadImage(file):
     return PhotoImage(file=".\\images\\{}".format(file))
@@ -31,6 +29,10 @@ class Window(Frame):
         self.root = root
         self.root.protocol("WM_DELETE_WINDOW", lambda : [dumpData(name, playerHistory=self.playerHistory, computerHistory=self.computerHistory, results=self.results), exit()])
         self.playerHistory, self.computerHistory, self.results = loadData(name)
+        data = sampleData(None, files=["data-input.json"])
+        self.sampleHistoryOne = data[0]
+        self.sampleHistoryTwo = data[1]
+        self.sampleResults = data[2]
         self.init_window()
         self.init_gameInfo()
 
@@ -50,6 +52,7 @@ class Window(Frame):
         self.showInfo = True
 
         self.menubar = Menu(self.root)  
+        self.menubar.add_command(label="Clear Data", command=self.clearData)  
         self.menubar.add_command(label="Toggle Display Mode", command=self.toggleDisplay)  
         self.menubar.add_command(label="Toggle Interesting Info", command=self.toggleInfo)  
         self.menubar.add_command(label="Logout", command=self.logout)  
@@ -104,6 +107,11 @@ class Window(Frame):
         self.master.protocol("WM_DELETE_WINDOW", lambda : [dumpData(name, playerHistory=self.playerHistory, computerHistory=self.computerHistory, results=self.results), exit()])
         self.master.mainloop()  
 
+    def clearData(self):
+        self.playerHistory = []
+        self.computerHistory = []
+        self.results = []
+
     def toggleInfo(self):
         self.showInfo = not self.showInfo
         # TODO Implement this
@@ -154,7 +162,7 @@ class Window(Frame):
         timer = setTimer()
         timer.start()
         
-        computerMove = calculateMove(name, self.playerHistory, self.computerHistory, self.results)    #Call function for the computer to make it's move
+        computerMove = calculateMove(name, self.playerHistory, self.computerHistory, self.results, self.sampleHistoryOne, self.sampleHistoryTwo, self.sampleResults)    #Call function for the computer to make it's move
         
         timer.stop()
         if self.showInfo:
@@ -221,7 +229,7 @@ class Window(Frame):
         self.line5 = Label(self.master, text=lines[4], font=("Courier", FONTSIZE), bg=BACKGROUND)
         self.line5.pack()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     #Var setup
     RGB = lambda red, green, blue: "#%02x%02x%02x" % (red, green, blue)   #RGB to hex
     WHITE = RGB(255, 255, 255)
