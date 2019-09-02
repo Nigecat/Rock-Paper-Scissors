@@ -50,28 +50,27 @@ def trainingData(*files, **args):
         with open(file) as f:
             data = {**data, **load(f)}
 
-    data.pop(args["ignore"], None)
-    #bytearray()   #Bytearray will increase the run speed
+    for item in args["ignore"]:
+        data.pop(item, None)
+    #bytearray(utf-8)   #Bytearray will increase the run speed (hypothetically, in reality - it doesn't work)
     return [data[key] for key in data.keys()]
 
-def dumpHistory(name, history):
-    '''Function to dump the current history to the json file
+def dumpData(name, **data):
+    '''Function to dump the current data to the json file
 
     name -- name of the user to dump the data to
-    history -- the history to dump to the file
+    data -- the data to dump to the file (dict)
     '''
+
     if name != "guest":
-        with open(".\\data\\data-user.json") as f:
-            try:    #Try/catch block, will catch if data-user.json empty
-                data = load(f)
-            except:
-                data = {}   #Set data to be blank
-        data[name] = history
+        tmp = {}
+        tmp[name] = data
+        data = tmp
         with open(".\\data\\data-user.json", "w") as f:
             dump(data, f, indent=4)
 
-def loadHistory(name):
-    '''Function to load the history of a user from the json file
+def loadData(name):
+    '''Function to load the data of a user from the json file
 
     name -- the name of the user to retrive the data from
     '''
@@ -79,10 +78,9 @@ def loadHistory(name):
         with open(".\\data\\data-user.json") as f:
             try:        #Try/catch block, will catch if data-user.json empty
                 data = load(f)
-                return data[name]  
+                return data[name]["playerHistory"], data[name]["computerHistory"], data[name]["results"]
             except:
-                return []   #If data-user.json is empty, return a blank list
-        
+                return [], [], []   #If data-user.json is empty, return a blank list
 
 def beats(action):
     '''Function to return what beats what
@@ -98,48 +96,52 @@ def beats(action):
 
 
 
-def calculateMove(name, history):
+def calculateMove(name, playerHistory, computerHistory, results):
     '''Function to calculate the computer's move
 
     name -- the name of the user playing
-    history -- the user's history
+    playerHistory -- the user's history
+    computerHistory -- the user's history
+    results -- the game results
     Note for code reading:
         Rock: 0
         Paper: 1
         Scissors: 2
     '''
 
-    if len(history) < 4:   #If the history is blank (then we have no data) or under 4
+    # TODO Implement using the computer history and results into the algorithm
+
+    if len(playerHistory) < 4:   #If the history is blank (then we have no data) or under 4
         #Pick a random option, this is weighted random because statistically, people play rock on the first turn. 
         return rndmove(weights=[0.3, 0.4, 0.3])
 
     #Else: (we don't need an else statement because return will stop the code)
-    for i in range(len(history) - 1, -1, -1):   #Run through the history backwards
+    for i in range(len(playerHistory) - 1, -1, -1):   #Run through the playerHistory backwards
         try:
-            if history[i] == history[i - 1] == history[i - 2]:
-                return beats(history[i])    #Check if the user is repeatedly playing the same action and play the counter
+            if playerHistory[i] == playerHistory[i - 1] == playerHistory[i - 2]:
+                return beats(playerHistory[i])    #Check if the user is repeatedly playing the same action and play the counter
             else:
                 break
         except: pass
 
     data = []
-    for item in trainingData("data-input.json", ignore="results"): 
+    for item in trainingData("data-input.json", ignore="results"): #Read the input data and ignore the results column
         data = data + item      #Load the data into a list
 
-    #data = data + history
+    #data = data + playerHistory
 
     search = [] #Var to store the characters to search for
-    history.reverse()   #Reverse history, because in python it is faster to referance the start of the list than the end
+    playerHistory.reverse()   #Reverse playerHistory, because in python it is faster to referance the start of the list than the end
     try:
-        search.append(history[0])   #Grab the first 4 entries of the list (that latest 4 moves)
-        search.append(history[1])       #This will return a IndexError if history is too short
-        search.append(history[2])
-        search.append(history[3])
+        search.append(playerHistory[0])   #Grab the first 4 entries of the list (that latest 4 moves)
+        search.append(playerHistory[1])       #This will return a IndexError if playerHistory is too short
+        search.append(playerHistory[2])
+        search.append(playerHistory[3])
     except IndexError:
-        history.reverse()   #Put history back to how it was and return a random move
+        playerHistory.reverse()   #Put playerHistory back to how it was and return a random move
         return rndmove()
     finally:
-        history.reverse()   #Put history back to normal
+        playerHistory.reverse()   #Put playerHistory back to normal
         search.reverse()    #Put search back the right way round
 
     predictions = []    #List to store the predictions of the user's next move
@@ -150,15 +152,15 @@ def calculateMove(name, history):
         except IndexError:
             break
         
-    for i in range(len(history)):  #Run through all the input data (same but for history (since that has a higher weighting))
+    for i in range(len(playerHistory)):  #Run through all the input data (same but for playerHistory (since that has a higher weighting))
         try:
-            if history[i] == search[0] and history[i + 1] == search[1] and history[i + 2] == search[2] and history[i + 3] == search[3]:
+            if playerHistory[i] == search[0] and playerHistory[i + 1] == search[1] and playerHistory[i + 2] == search[2] and playerHistory[i + 3] == search[3]:
                 #These have 300x more weight than the pattern matching from the input data
-                #predictions.append(history[i + 4]) #Check if any patterns match and add the next move to the predictions
-                if history[i + 4] == 0:
-                    predictions = predictions + [history[i + 4]] * 600  #Weighting for rock is heigher
+                #predictions.append(playerHistory[i + 4]) #Check if any patterns match and add the next move to the predictions
+                if playerHistory[i + 4] == 0:
+                    predictions = predictions + [playerHistory[i + 4]] * 600  #Weighting for rock is heigher
                 else:
-                    predictions = predictions + [history[i + 4]] * 300
+                    predictions = predictions + [playerHistory[i + 4]] * 300
         except IndexError:
             break
 
