@@ -144,18 +144,18 @@ def calculateMove(name, playerHistory, computerHistory, results):
 
     predictions = []
 
-    searchStrPlayer = [playerHistory[i] for i in range(len(playerHistory) - 1, len(playerHistory) - CHECK_RANGE - 1,-1) ]
-    searchStrComputer = [computerHistory[i] for i in range(len(computerHistory) - 1, len(computerHistory) - CHECK_RANGE - 1,-1) ]
+    searchStrPlayer = [playerHistory[i] for i in range(len(playerHistory) - 1, len(playerHistory) - CHECK_RANGE - 1,-1)]
+    searchStrComputer = [computerHistory[i] for i in range(len(computerHistory) - 1, len(computerHistory) - CHECK_RANGE - 1,-1)]
+    searchStrResults = [results[i] for i in range(len(results) - 1, len(results) - CHECK_RANGE - 1,-1)]
 
     if len(playerHistory) >= CHECK_RANGE:
         for i in range(len(sampleHistoryOne) - CHECK_RANGE):
-            for j in range(len(playerHistory) - CHECK_RANGE):
-                for x in range(1, CHECK_RANGE + 1):
-                    if sampleHistoryOne[i + x] == playerHistory[j + x] and sampleHistoryTwo[i + x] == computerHistory[j + x] and sampleResults[i + x] == results[j + x]:
-                        if x == CHECK_RANGE:
-                            predictions.append(sampleHistoryOne[i + x + 1])
-                    else:
-                        break
+            for x in range(CHECK_RANGE):
+                if sampleHistoryOne[i + x] == searchStrPlayer[x] and sampleHistoryTwo[i + x] == searchStrComputer[x] and sampleResults[i + x] == searchStrResults[x]:
+                    if x == CHECK_RANGE:
+                        predictions.append(sampleHistoryOne[i + x + 1])
+                else:
+                    break
 
     if predictions == []:   #If it can't make any predictions return a random move
         return rndmove()
