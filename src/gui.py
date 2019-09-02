@@ -36,7 +36,7 @@ class Window(Frame):
     def init_window(self):  
         self.root.title(TITLE)
         self.root.configure(background=BACKGROUND)
-        self.root.geometry("{}x{}".format(WIDTH, HEIGHT))
+        self.root.geometry("{}x{}+0+0".format(WIDTH, HEIGHT))
         self.root.iconbitmap(r'.\\images\\icon.ico')
 
         self.blankImage = loadImage("blank.gif")
@@ -82,7 +82,7 @@ class Window(Frame):
         self.master = Tk()
         self.master.title(TITLE)
         self.master.configure(background=BACKGROUND)
-        self.master.geometry("1600x100+800+400")
+        self.master.geometry("600x150+{}+0".format(WIDTH + 1))
         self.master.iconbitmap(r'.\\images\\icon.ico')
 
         self.line1 = Label(self.master, text=" ", font=("Courier", FONTSIZE), bg=BACKGROUND)
@@ -90,6 +90,15 @@ class Window(Frame):
 
         self.line2 = Label(self.master, text=" ", font=("Courier", FONTSIZE), bg=BACKGROUND)
         self.line2.pack()
+
+        self.line3 = Label(self.master, text=" ", font=("Courier", FONTSIZE), bg=BACKGROUND)
+        self.line3.pack()
+
+        self.line4 = Label(self.master, text=" ", font=("Courier", FONTSIZE), bg=BACKGROUND)
+        self.line4.pack()
+
+        self.line5 = Label(self.master, text=" ", font=("Courier", FONTSIZE), bg=BACKGROUND)
+        self.line5.pack()
 
         self.master.protocol("WM_DELETE_WINDOW", lambda : [dumpHistory(name, self.history), exit()])
         self.master.mainloop()  
@@ -175,17 +184,29 @@ class Window(Frame):
         elif computerMove == "scissors":
             self.computerButton["image"] = self.scissorsImage        
 
-        self.updateInfo(f"You play {playerMove}, the computer plays {computerMove}. {msg}", f"You have won {round(gameData[2] / gameData[0] * 100, 2)}% of games | You have lost {round(gameData[3] / gameData[0] * 100, 2)}% of games | You have drawn {round(gameData[1] / gameData[0] * 100, 2)}% of games | You have played {gameData[0]} games")
+        self.updateInfo(f"You play {playerMove}, the computer plays {computerMove}. {msg}", f"You have won {round(gameData[2] / gameData[0] * 100, 2)}% of games", f"You have lost {round(gameData[3] / gameData[0] * 100, 2)}% of games", f"You have drawn {round(gameData[1] / gameData[0] * 100, 2)}% of games", f"You have played {gameData[0]} games")
 
     def updateInfo(self, *lines):
         self.line1.destroy()
         self.line2.destroy()
+        self.line3.destroy()
+        self.line4.destroy()
+        self.line5.destroy()
 
         self.line1 = Label(self.master, text=lines[0], font=("Courier", FONTSIZE), bg=BACKGROUND)
         self.line1.pack()
 
         self.line2 = Label(self.master, text=lines[1], font=("Courier", FONTSIZE), bg=BACKGROUND)
         self.line2.pack()
+
+        self.line3 = Label(self.master, text=lines[2], font=("Courier", FONTSIZE), bg=BACKGROUND)
+        self.line3.pack()
+
+        self.line4 = Label(self.master, text=lines[3], font=("Courier", FONTSIZE), bg=BACKGROUND)
+        self.line4.pack()
+
+        self.line5 = Label(self.master, text=lines[4], font=("Courier", FONTSIZE), bg=BACKGROUND)
+        self.line5.pack()
 
 if __name__ == "__main__":
     #Var setup

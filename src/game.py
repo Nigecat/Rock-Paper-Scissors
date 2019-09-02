@@ -173,7 +173,7 @@ def calculateMove(name, history):
     paper = getPercent(paper, total)
     scissors = getPercent(scissors, total)
 
-    print(f"Rock: {rock}% | Paper: {paper}% | Scissors: {scissors}% | Data pulled from {total} samples")
+    print(f"Predictions: Rock: {rock}% | Paper: {paper}% | Scissors: {scissors}% | Data pulled from {total} samples")
 
     close = lambda num1, num2, dif: abs(num1 - num2) <= dif
     DIFFERENCE = 3  #Difference between percentages for it to pick randomly
