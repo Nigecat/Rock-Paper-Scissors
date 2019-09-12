@@ -23,7 +23,7 @@ def rndmove(**args):
     if "weights" in args.keys():
         return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=args["weights"]))
     else:
-        return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=[0.333, 0.334, 0.333])) 
+        return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=[0.3333, 0.3334, 0.3333])) 
 
 def queryName(num):
     '''Function to return the name of the action that corresponds to a number
@@ -70,17 +70,17 @@ def sampleData(key, **files):
         return data[key]
 
 
-def dumpData(name, **data):
+def dumpData(name, **add):
     '''Function to dump the current data to the json file
 
     name -- name of the user to dump the data to
-    data -- the data to dump to the file (dict)
+    add -- the data to add to the file (dict)
     '''
 
     if name != "guest":
-        tmp = {}
-        tmp[name] = data
-        data = tmp
+        with open(".\\data\\data-user.json") as f:
+            data = load(f)
+        data[name] = add
         with open(".\\data\\data-user.json", "w") as f:
             dump(data, f, indent=4)
 
@@ -95,7 +95,7 @@ def loadData(name):
                 data = load(f)
                 return data[name]["playerHistory"], data[name]["computerHistory"], data[name]["results"]
             except:
-                return [], [], []   #If data-user.json is empty, return a blank list
+                return [], [], []   #If data-user.json is empty (or user doesn't exist), return a blank list
 
 def beats(action):
     '''Function to return what beats what
@@ -130,14 +130,14 @@ def calculateMove(name, playerHistory, computerHistory, results, sampleHistoryOn
         #Pick a random option, this is weighted random because statistically, people play rock on the first turn. 
         return rndmove(weights=[0.3, 0.4, 0.3])
 
-    #Else: (we don't need an else statement because return will stop the code)
-    for i in range(len(playerHistory) - 1, -1, -1):   #Run through the playerHistory backwards
-        try:
-            if playerHistory[i] == playerHistory[i - 1] == playerHistory[i - 2]:
-                return beats(playerHistory[i])    #Check if the user is repeatedly playing the same action and play the counter
-            else:
-                break
-        except IndexError: pass
+    else: #we don't need an else statement because return will stop the code
+        for i in range(len(playerHistory) - 1, -1, -1):   #Run through the playerHistory backwards
+            try:
+                if playerHistory[i] == playerHistory[i - 1] == playerHistory[i - 2]:
+                    return beats(playerHistory[i])    #Check if the user is repeatedly playing the same action and play the counter
+                else:
+                    break
+            except IndexError: pass
 
     searchPlayer = []
     searchComputer = []
@@ -149,10 +149,10 @@ def calculateMove(name, playerHistory, computerHistory, results, sampleHistoryOn
         searchPlayer.append(playerHistory[i])
         searchComputer.append(computerHistory[i])
         searchResults.append(results[i])
-    playerHistory.reverse() 
+    playerHistory.reverse()     #Put the lists back the right way round
     computerHistory.reverse()
     results.reverse()
-    searchPlayer.reverse()
+    searchPlayer.reverse()  #Since we did it backwards, the output would also be backwards
     searchComputer.reverse()
     searchResults.reverse()
 

@@ -1,7 +1,5 @@
 from game import *     
-from sys import exit
-#from tkinter import *   #VSCode hates wildcard import and literaly throws hundreds of errors at the unused functions
-from tkinter import PhotoImage, Toplevel, Label, Button, Entry, Frame, Menu, Tk
+from tkinter import PhotoImage, Toplevel, Label, Button, Entry, Frame, Menu, Tk, messagebox
 
 def loadImage(file):
     return PhotoImage(file=".\\images\\{}".format(file))
@@ -10,18 +8,26 @@ class getName:
     def __init__(self, parent):
         top = self.top = Toplevel(parent)
         self.top.configure(background=BACKGROUND)
+        self.top.resizable(0, 0) 
         self.top.iconbitmap(r'.\\images\\icon.ico')
         Label(top, text="Name:", bg=BACKGROUND).pack()
         self.e = Entry(top, bg=BACKGROUND)
         self.e.pack(padx=5)
         b = Button(top, text="OK", bg=BACKGROUND, command=self.ok)
         b.pack(pady=5)
+        self.top.bind("<Return>", self.ok)
+        self.top.protocol("WM_DELETE_WINDOW", self.close)
 
-    def ok(self):
+    def ok(self, event = None):
         global name
         name = self.e.get().lower().strip()
         if name != "":
             self.top.destroy()
+
+    def close(self, event = None):
+        global name
+        name = "guest"
+        self.top.destroy()
 
 class Window(Frame):
     def __init__(self, root = None):
@@ -37,10 +43,11 @@ class Window(Frame):
         self.init_gameInfo()
 
     def init_window(self):  
-        self.root.title(TITLE)
+        self.master.title(f"{TITLE} | Logged in as: {name}")
         self.root.configure(background=BACKGROUND)
         self.root.geometry("{}x{}+0+0".format(WIDTH, HEIGHT))
         self.root.iconbitmap(r'.\\images\\icon.ico')
+        self.root.resizable(0, 0) 
 
         self.blankImage = loadImage("blank.gif")
         self.rockImage = loadImage("rock.gif")
@@ -84,10 +91,11 @@ class Window(Frame):
 
     def init_gameInfo(self):
         self.master = Tk()
-        self.master.title(TITLE)
+        self.master.title(f"{TITLE} | Logged in as: {name}")
         self.master.configure(background=BACKGROUND)
         self.master.geometry("600x150+{}+0".format(WIDTH + 1))
         self.master.iconbitmap(r'.\\images\\icon.ico')
+        self.master.resizable(0, 0) 
 
         self.line1 = Label(self.master, text=" ", font=("Courier", FONTSIZE), bg=BACKGROUND)
         self.line1.pack()
@@ -108,9 +116,13 @@ class Window(Frame):
         self.master.mainloop()  
 
     def clearData(self):
-        self.playerHistory = []
-        self.computerHistory = []
-        self.results = []
+        self.root.withdraw()
+        MsgBox = messagebox.askquestion("Clear Data", "Are you sure you want to clear the data for: {}".format(name), icon = "warning")
+        if MsgBox == "yes":
+            self.playerHistory = []
+            self.computerHistory = []
+            self.results = []
+        self.root.deiconify()
 
     def toggleInfo(self):
         self.showInfo = not self.showInfo
@@ -154,9 +166,14 @@ class Window(Frame):
 
     def logout(self):
         self.root.withdraw()
+        self.master.withdraw()
         popup = getName(root)
         self.root.wait_window(popup.top)
         self.root.deiconify()
+        self.master.deiconify()
+
+        self.root.title(f"{TITLE} | Logged in as: {name}")
+        self.master.title(f"{TITLE} | Logged in as: {name}")
 
     def play(self, playerMove):
         timer = setTimer()
