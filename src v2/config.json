@@ -1,0 +1,16 @@
+{
+    "WHITE": "#ffffff",
+    "RED": "#ff0000",
+    "YELLOW": "",
+    "GREEN": "#00ff00",
+
+    "BACKGROUND": "WHITE",
+    "HEIGHT": 431,
+    "WIDTH": 610,
+    "TITLE": "Rock-Paper-Scissors",
+    "FONTSIZE": 12,
+    
+
+    "CHECK_RANGE": 3,
+    "PLAYER_WEIGHTING": 300
+}

@@ -1,25 +1,37 @@
+#
+#
+#   Please read the other file (gui.py) first
+#   This is the file responsible for generating the computer's move
+#
+#
+
 from json import dump, load
 from time import process_time
 from random import choices as rndchoice
 
 class setTimer(object):
+    '''Function to create a timer object'''
+
     def __init__(self):
         self.startTime = 0
         self.stopTime = 0
         self.totalTime = 0
 
     def start(self):
+        '''Start the timer'''
         self.startTime = process_time()
 
     def stop(self):
+        '''Stop the timer'''
         self.stopTime = process_time()
         self.totalTime = self.stopTime - self.startTime
 
 def rndmove(**args):
     '''Function to return a random move
 
-    args -- arguments for the functions, if the population is left blank. It will default to (rock, paper, scissors)
+    args -- arguments for the functions, if no weights are included, it will default to 33/33/33
     '''
+
     if "weights" in args.keys():
         return ''.join(rndchoice(population=["rock", "paper", "scissors"], weights=args["weights"]))
     else:
@@ -30,6 +42,7 @@ def queryName(num):
 
     num -- the number of the action to get the name of
     '''
+
     if num == 0:
         return "rock"
     elif num == 1:
@@ -42,6 +55,7 @@ def queryNum(action):
 
     action -- the action to get the number of
     '''
+
     if action == "rock":
         return 0
     elif action == "paper":
@@ -52,19 +66,19 @@ def queryNum(action):
 def sampleData(key, **files):
     '''Function to retrive the sample (input) data
 
-    Pulls data from [files.json], returns a list of all the values, can take multiple files as input, can ignore certain keys
+    Pulls data from [files.json], returns a list of all the values, can take multiple files as input, can return specific keys
     '''
 
     files = files["files"]
 
-    files = [".\\data\\" + item for item in files]
+    files = [".\\data\\" + item for item in files]  #Add the file path to the data files infront of the file name
 
-    data = {}
+    data = {}   
     for file in files:
-        with open(file) as f:
+        with open(file) as f:   #Open each json file and add the data from it onto the data dict
             data = {**data, **load(f)}
 
-    if key == None:
+    if key == None:     #If you dont specify a key, return all of them
         return [data[key] for key in data.keys()]
     else:
         return data[key]
@@ -89,6 +103,7 @@ def loadData(name):
 
     name -- the name of the user to retrive the data from
     '''
+
     if name != "guest":
         with open(".\\data\\data-user.json") as f:
             try:        #Try/catch block, will catch if data-user.json empty
@@ -96,12 +111,15 @@ def loadData(name):
                 return data[name]["playerHistory"], data[name]["computerHistory"], data[name]["results"]
             except:
                 return [], [], []   #If data-user.json is empty (or user doesn't exist), return a blank list
+    else:
+        return [], [], []
 
 def beats(action):
     '''Function to return what beats what
 
     action -- the action that is played, whatever beats this action will be returned
     '''
+
     if action == 0 or action == "rock":
         return "paper"
     elif action == 1 or action == "paper":
@@ -109,7 +127,16 @@ def beats(action):
     elif action == 2 or action == "scissors":
         return "rock"
 
+def readConfig(file):
+    '''Function to read the config file
 
+    file -- the config file to read (json)
+    '''
+
+    with open("config.json") as f:
+        data = load(f)
+
+    return data
 
 def calculateMove(name, playerHistory, computerHistory, results, sampleHistoryOne, sampleHistoryTwo, sampleResults):
     '''Function to calculate the computer's move
@@ -124,7 +151,9 @@ def calculateMove(name, playerHistory, computerHistory, results, sampleHistoryOn
         Scissors: 2
     '''
 
-    CHECK_RANGE = 3 #Basically a difficulty setting (lower = easier)
+    config = readConfig("config.json")
+    CHECK_RANGE = config["CHECK_RANGE"]     #Basically a difficulty setting (lower = easier)
+    PLAYER_WEIGHTING = config["PLAYER_WEIGHTING"]     #THe weighting for the user data compared to the input data (basically a multiplier)
 
     if len(playerHistory) < CHECK_RANGE:   #If the history is blank (then we have no data) or under the check range
         #Pick a random option, this is weighted random because statistically, people play rock on the first turn. 
@@ -152,20 +181,20 @@ def calculateMove(name, playerHistory, computerHistory, results, sampleHistoryOn
     playerHistory.reverse()     #Put the lists back the right way round
     computerHistory.reverse()
     results.reverse()
-    searchPlayer.reverse()  #Since we did it backwards, the output would also be backwards
+    searchPlayer.reverse()  #Since we did it backwards, the output would also be backwards, so we need to reverse it
     searchComputer.reverse()
     searchResults.reverse()
 
     predictions = []
     for i in range(len(results) - CHECK_RANGE):
         add = True
-        for x in range(len(searchResults)):
+        for x in range(len(searchResults)): #Run through the results and check if there are any patterns matching the user data of the length of the check range
             if playerHistory[i + x] == searchPlayer[x] and computerHistory[i + x] == searchComputer[x] and results[i + x] == searchResults[x]:
                 continue
             else:
                 add = False
         if add:     #Patterns from the user's history are weighted 300 times more heavily than the other data
-            predictions = predictions + [sampleHistoryTwo[i + CHECK_RANGE]] * 300
+            predictions = predictions + [sampleHistoryTwo[i + CHECK_RANGE]] * PLAYER_WEIGHTING
 
     for i in range(len(sampleResults) - CHECK_RANGE):
         add = True
@@ -183,31 +212,35 @@ def calculateMove(name, playerHistory, computerHistory, results, sampleHistoryOn
     total = rock + paper + scissors #This if for calculating percentages
 
     #Convert the totals to percentages (certainty)
-    getPercent = lambda count, total: round((count / total) * 100, 2)
-    rock = getPercent(rock, total)
-    paper = getPercent(paper, total)
-    scissors = getPercent(scissors, total)
+    try: 
+        getPercent = lambda count, total: round((count / total) * 100, 2)  #Temp funct to get the percent
+        rock = getPercent(rock, total)
+        paper = getPercent(paper, total)
+        scissors = getPercent(scissors, total)
 
-    print(f"Predictions: Rock: {rock}% | Paper: {paper}% | Scissors: {scissors}% | Data pulled from {total} samples")
+        print(f"Predictions: Rock: {rock}% | Paper: {paper}% | Scissors: {scissors}% | Data pulled from {total} samples")
 
-    close = lambda num1, num2, dif: abs(num1 - num2) <= dif
-    DIFFERENCE = 3  #Difference between percentages for it to pick randomly
-    if close(rock, paper, DIFFERENCE):  #Check if any of the predictions are close, and if they are return one of them randomly (to make it less predictable)
-        return rndmove(weights=[0.0, 0.5, 0.5])
-    elif close(rock, scissors, DIFFERENCE):
-        return rndmove(weights=[0.5, 0.5, 0])
-    elif close(paper, scissors, DIFFERENCE):
-        return rndmove(weights=[0.5, 0, 0.5])
-    else:   #If none of them are close
-        #Return what beats the highest prediction for what the user will play
-        if rock > paper and rock > scissors:
-            return beats("rock")
-        elif paper > rock and paper > scissors:
-            return beats("paper")
-        elif scissors > rock and scissors > paper:
-            return beats("scissors")
-        else:
-            return rndmove()    #Incase something goes wrong
+        close = lambda num1, num2, dif: abs(num1 - num2) <= dif
+        DIFFERENCE = 2  #Difference between percentages for it to pick randomly
+        if close(rock, paper, DIFFERENCE):  #Check if any of the predictions are close, and if they are return one of them randomly (to make it less predictable)
+            return rndmove(weights=[0.0, 0.5, 0.5])
+        elif close(rock, scissors, DIFFERENCE):
+            return rndmove(weights=[0.5, 0.5, 0])
+        elif close(paper, scissors, DIFFERENCE):
+            return rndmove(weights=[0.5, 0, 0.5])
+        else:   #If none of them are close
+            #Return what beats the highest prediction for what the user will play
+            if rock > paper and rock > scissors:
+                return beats("rock")
+            elif paper > rock and paper > scissors:
+                return beats("paper")
+            elif scissors > rock and scissors > paper:
+                return beats("scissors")
+            else:
+                return rndmove()    #Incase something goes wrong
+
+    except ZeroDivisionError:
+        return rndmove()
 
 if __name__ == '__main__':  #If you run this file, redirect you to the other file
     from os import system

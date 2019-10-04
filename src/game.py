@@ -193,3 +193,7 @@ def calculateMove(name, playerHistory, computerHistory, results):
             return beats("paper")
         elif scissors > rock and scissors > paper:
             return beats("scissors")
+
+if __name__ == '__main__':
+    from os import system
+    system("game.py")
