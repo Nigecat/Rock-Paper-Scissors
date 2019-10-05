@@ -5,17 +5,10 @@
 #
 #
 
-from game import *      #Import from local file game.py  
-from os import system
-from tkinter import PhotoImage, Toplevel, Label, Button, Entry, Frame, Menu, Tk, messagebox
-
-def loadImage(file):
-    '''Formats a file and returns it as an image
-
-    file -- the input file
-    '''
-
-    return PhotoImage(file=".\\images\\{}".format(file))
+from utils import *    #Import from local utils.py 
+from json_data import *    #Import from local json_data.py 
+from move import calculateMove      #Import from local move.py 
+from tkinter import Toplevel, Label, Button, Entry, Frame, Menu, Tk, messagebox
 
 class getName:
     '''Class to get the name of the user'''
@@ -38,40 +31,43 @@ class getName:
     def ok(self, event = None):
         '''Gets called when the ok button is clicked'''
 
-        global name
-        name = self.e.get().lower().strip() #Set the global variable 'name' to the entered user's name
-        if name != "":
+        self.name = self.e.get().lower().strip() #Set the class variable 'name' to the entered user's name
+        if self.name != "":
             self.top.destroy()  #Terminate the input window
 
     def close(self, event = None):
         '''Gets called when the window is closed (by the x button)'''
 
-        global name
-        name = "guest"  #Default to guest, this will not save data
+        self.name = "guest"  #Default to guest, this will not save data
         self.top.destroy()
 
 class Window(Frame):
-    def __init__(self, root = None):
-        global firstRun
+    def __init__(self, root = None, firstRun = False):
         Frame.__init__(self, root)                
         self.root = root
-        self.root.protocol("WM_DELETE_WINDOW", lambda : [dumpData(name, playerHistory=self.playerHistory, computerHistory=self.computerHistory, results=self.results), exit()])
+        self.firstRun = firstRun
+        self.root.protocol("WM_DELETE_WINDOW", lambda : [dumpData(self.name, playerHistory=self.playerHistory, computerHistory=self.computerHistory, results=self.results), exit()])
+        self.name = "guest"
         self.gameData = [0, 0, 0, 0] #Stores: [total games, draws, wins, loses]
-        self.playerHistory, self.computerHistory, self.results = loadData(name)
-        data = sampleData(None, files=["data-input.json"])
+        self.playerHistory, self.computerHistory, self.results = loadData(self.name)
+        data = sampleData(None, files=["data-input-one.json", "data-input-two.json"])
         self.sampleHistoryOne = data[0]
         self.sampleHistoryTwo = data[1]
         self.sampleResults = data[2]
 
-        if firstRun:
-            self.logout()   #Logout the user to get their username
+        if self.firstRun:
+            self.logout()   #Logout the user to get their username, only for the first game
+        else:
+            global name     #Global variable name so it isnt lost on round reset
+            self.name = name
+            self.playerHistory, self.computerHistory, self.results = loadData(self.name)
         self.init_window()  #Initialize the main game window
         self.init_gameInfo()       #Initialize the game info window
 
     def init_window(self):  
         '''Init the main play window'''
 
-        self.master.title(f"{TITLE} | Logged in as: {name}")    #Setup the window
+        self.master.title(f"{TITLE} | Logged in as: {self.name}")    #Setup the window
         self.root.configure(background=BACKGROUND)
         self.root.geometry("{}x{}+0+0".format(WIDTH, HEIGHT))
         self.root.iconbitmap(r'.\\images\\icon.ico')
@@ -122,7 +118,7 @@ class Window(Frame):
         '''Init the game info window'''
 
         self.master = Tk()
-        self.master.title(f"{TITLE} | Logged in as: {name}")
+        self.master.title(f"{TITLE} | Logged in as: {self.name}")
         self.master.configure(background=BACKGROUND)
         self.master.geometry("600x150+{}+0".format(WIDTH + 1))
         self.master.iconbitmap(r'.\\images\\icon.ico')
@@ -144,14 +140,14 @@ class Window(Frame):
         self.line5 = Label(self.master, text=" ", font=("Courier", FONTSIZE), bg=BACKGROUND)
         self.line5.pack()
 
-        self.master.protocol("WM_DELETE_WINDOW", lambda : [dumpData(name, playerHistory=self.playerHistory, computerHistory=self.computerHistory, results=self.results), exit()])
+        self.master.protocol("WM_DELETE_WINDOW", lambda : [dumpData(self.name, playerHistory=self.playerHistory, computerHistory=self.computerHistory, results=self.results), exit()])
         self.master.mainloop()  
 
     def clearData(self):
         '''Clear the data of the current logged in user'''
 
         self.root.withdraw()
-        MsgBox = messagebox.askquestion("Clear Data", "Are you sure you want to clear the data for: {}".format(name), icon = "warning")
+        MsgBox = messagebox.askquestion("Clear Data", "Are you sure you want to clear the data for: {}".format(self.name), icon = "warning")
         if MsgBox == "yes":     #Make sure the user meant to click this button and it wasn't an accident
             self.playerHistory = []
             self.computerHistory = []
@@ -200,35 +196,37 @@ class Window(Frame):
     def logout(self):
         '''Logout the current user'''
 
-        dumpData(name, playerHistory=self.playerHistory, computerHistory=self.computerHistory, results=self.results)
+        dumpData(self.name, playerHistory=self.playerHistory, computerHistory=self.computerHistory, results=self.results)
 
         self.root.withdraw()        #Hide both the other game windows
         self.master.withdraw()
         popup = getName(root)   #Load the other popup window to get the username
         self.root.wait_window(popup.top)
+        self.name = popup.name
         self.root.deiconify()        #Unhide the fame windows
         self.master.deiconify()
 
-        self.root.title(f"{TITLE} | Logged in as: {name}")  #Update the titles
-        self.master.title(f"{TITLE} | Logged in as: {name}")
+        self.root.title(f"{TITLE} | Logged in as: {self.name}")  #Update the titles
+        self.master.title(f"{TITLE} | Logged in as: {self.name}")
 
-        self.playerHistory, self.computerHistory, self.results = loadData(name) #Re-load the data
+        self.gameData = [0, 0, 0, 0]
+
+        self.playerHistory, self.computerHistory, self.results = loadData(self.name) #Re-load the data
 
     def play(self, playerMove):
         '''Gets called when the player plays a move
 
         playerMove -- the move the player has played
         '''
-        global firstRun
 
         timer = setTimer()  #Timer to time the function, it's just interesting data
         timer.start()
         
         #Call function for the computer to make it's move
-        computerMove = calculateMove(name, self.playerHistory, self.computerHistory, self.results, self.sampleHistoryOne, self.sampleHistoryTwo, self.sampleResults)   
+        computerMove = calculateMove(self.name, self.playerHistory, self.computerHistory, self.results, self.sampleHistoryOne, self.sampleHistoryTwo, self.sampleResults)   
         
         timer.stop()
-        print(f"Elapsed time: {timer.totalTime}")   #Gets printed to the console window
+        print(f"Elapsed time: {timer.totalTime}")   #Prints the time taken for the computer move to the console
 
         self.playerHistory.append(queryNum(playerMove))        #Adds to history AFTER computer makes it's move (it doesn't cheat)
         self.computerHistory.append(queryNum(computerMove))
@@ -273,14 +271,15 @@ class Window(Frame):
             MsgBox = messagebox.showinfo("Game Complete!", "Press <OK> to play again.")
 
             #Dump the user data because it will be reset
-            dumpData(name, playerHistory=self.playerHistory, computerHistory=self.computerHistory, results=self.results)
+            dumpData(self.name, playerHistory=self.playerHistory, computerHistory=self.computerHistory, results=self.results)
 
             self.root.destroy() #Destroy the windows
             self.master.destroy()
 
-            firstRun = False
+            global name  
+            name = self.name    
 
-            return      #This will return from the class and go back to line 335 (root.mainloop()), this restarts the loop and will re-initialize the classes
+            return      #This will return from the class and go back to the mainloop (root.mainloop()), this restarts the loop and will re-initialize the classes
 
     def updateInfo(self, *lines):
         '''Update the info on the game info window
@@ -325,11 +324,13 @@ if __name__ == '__main__':
     ROUNDS = config["ROUNDS"]
 
     firstRun = True
+    name = None
 
     while True:
-        if firstRun:
-            name = "guest"
-
         root = Tk()
-        app = Window(root)
+        if firstRun:
+            app = Window(root, True)
+            firstRun = False
+        else:
+            app = Window(root)
         root.mainloop()  

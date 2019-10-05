@@ -11,5 +11,6 @@
     "ROUNDS": 20,
 
     "CHECK_RANGE": 3,
-    "PLAYER_WEIGHTING": 300
+    "PLAYER_WEIGHTING": 300,
+    "DIFFERENCE": 2
 }
