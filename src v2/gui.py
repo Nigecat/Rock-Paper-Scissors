@@ -84,7 +84,7 @@ class Window(Frame):
 
         #Setup the menubar widgets, these are clickable
         self.menubar = Menu(self.root)  
-        self.menubar.add_command(label="Clear Data", command=self.clearData)  
+        self.menubar.add_command(label="Clear Personal Data", command=self.clearData)  
         self.menubar.add_command(label="Toggle Display Mode", command=self.toggleDisplay)  
         self.menubar.add_command(label="Logout", command=self.logout)  
         self.root.config(menu=self.menubar)  

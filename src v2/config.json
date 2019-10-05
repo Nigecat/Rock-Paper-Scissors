@@ -10,7 +10,7 @@
     "FONTSIZE": 12,
     "ROUNDS": 20,
 
-    "CHECK_RANGE": 3,
+    "CHECK_RANGE": 4,
     "PLAYER_WEIGHTING": 300,
     "DIFFERENCE": 2
 }
