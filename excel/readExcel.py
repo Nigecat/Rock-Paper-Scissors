@@ -1,3 +1,9 @@
+#
+#
+#   The input data the program uses to create it's move was sourced from an excel spreadsheet, this code converts the spreadsheet into json
+#
+#
+
 from json import dump
 from random import choice
 from pandas import read_excel
@@ -16,9 +22,15 @@ gameId = dt["game_id"]
 playerOne = dt["player_one_throw"]
 playerTwo = dt["player_two_throw"]
 
-playerOne = [x - 1 if x != 0 else choice([0, 1, 2]) for x in playerOne]
-playerTwo = [x - 1 if x != 0 else choice([0, 1, 2]) for x in playerTwo]
+print("Formatting data...")
 
+print("     (player one)")
+playerOne = [x if x != 3 else choice([0, 1, 2]) for x in playerOne]
+
+print("     (player two)")
+playerTwo = [x if x != 3 else choice([0, 1, 2]) for x in playerTwo]
+
+print("     (results)")
 results = []
 for i in range(len(playerOne)):
     if playerOne[i] == playerTwo[i]:
@@ -33,10 +45,10 @@ data = {
     "playerTwo": playerTwo,
     "results": results
 }
-print("Spreadsheet loaded...")
+
 print("Dumping json...")
+
 with open("excelOut.json", "w") as f:
     dump(data, f)
 
-print("json file created...")
-input()
+input("DONE")

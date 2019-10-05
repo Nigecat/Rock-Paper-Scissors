@@ -1,11 +1,12 @@
 #
 #
 #   This script is a computer implementation of rock paper scissors, for more details on this game please visit https://en.wikipedia.org/wiki/Rock-paper-scissors
-#   This is the file responsible for creating and maintaining the user interface
+#   This is the file responsible for creating and maintaining the user interface, this game uses a standard round length of 20
 #
 #
 
 from game import *      #Import from local file game.py  
+from os import system
 from tkinter import PhotoImage, Toplevel, Label, Button, Entry, Frame, Menu, Tk, messagebox
 
 def loadImage(file):
@@ -31,14 +32,14 @@ class getName:
         self.e.pack(padx=5)
         b = Button(top, text="OK", bg=BACKGROUND, command=self.ok)
         b.pack(pady=5)
-        self.top.bind("<Return>", self.ok)
+        self.top.bind("<Return>", self.ok)              #Make it so it presses the ok button when the enter key is pressed
         self.top.protocol("WM_DELETE_WINDOW", self.close)
 
     def ok(self, event = None):
         '''Gets called when the ok button is clicked'''
 
         global name
-        name = self.e.get().lower().strip() #Set the global variable 'name' to the entereed user's name
+        name = self.e.get().lower().strip() #Set the global variable 'name' to the entered user's name
         if name != "":
             self.top.destroy()  #Terminate the input window
 
@@ -51,16 +52,19 @@ class getName:
 
 class Window(Frame):
     def __init__(self, root = None):
+        global firstRun
         Frame.__init__(self, root)                
         self.root = root
         self.root.protocol("WM_DELETE_WINDOW", lambda : [dumpData(name, playerHistory=self.playerHistory, computerHistory=self.computerHistory, results=self.results), exit()])
+        self.gameData = [0, 0, 0, 0] #Stores: [total games, draws, wins, loses]
         self.playerHistory, self.computerHistory, self.results = loadData(name)
         data = sampleData(None, files=["data-input.json"])
         self.sampleHistoryOne = data[0]
         self.sampleHistoryTwo = data[1]
         self.sampleResults = data[2]
 
-        self.logout()   #Logout the user to get their username
+        if firstRun:
+            self.logout()   #Logout the user to get their username
         self.init_window()  #Initialize the main game window
         self.init_gameInfo()       #Initialize the game info window
 
@@ -215,6 +219,7 @@ class Window(Frame):
 
         playerMove -- the move the player has played
         '''
+        global firstRun
 
         timer = setTimer()  #Timer to time the function, it's just interesting data
         timer.start()
@@ -228,25 +233,25 @@ class Window(Frame):
         self.playerHistory.append(queryNum(playerMove))        #Adds to history AFTER computer makes it's move (it doesn't cheat)
         self.computerHistory.append(queryNum(computerMove))
 
-        gameData[0] += 1
+        self.gameData[0] += 1
         if playerMove == computerMove:
-            gameData[1] += 1    #Draw
+            self.gameData[1] += 1    #Draw
             msg = "Draw!"
             self.results.append(0)  #Update the storage var 
-            self.filler["background"] = YELLOW  #Change colour of the square in the middle on the bottom row
-            self.root.configure(background=YELLOW)         #Corrosponding to the game result
+            self.filler["background"] = DRAW  #Change colour of the square in the middle on the bottom row
+            self.root.configure(background=DRAW)         #Corrosponding to the game result
         elif beats(playerMove) != computerMove:
-            gameData[2] += 1    #Win
+            self.gameData[2] += 1    #Win
             msg = "You win!"
             self.results.append(2)
-            self.filler["background"] = GREEN
-            self.root.configure(background=GREEN)
+            self.filler["background"] = WIN
+            self.root.configure(background=WIN)
         else:
-            gameData[3] += 1    #Lose
+            self.gameData[3] += 1    #Lose
             msg = "You lose..."
             self.results.append(1)
-            self.filler["background"] = RED
-            self.root.configure(background=RED)
+            self.filler["background"] = LOSE
+            self.root.configure(background=LOSE)
 
         if playerMove == "rock":    #Set the images that show who played what
             self.playerButton["image"] = self.rockImage
@@ -262,7 +267,20 @@ class Window(Frame):
         elif computerMove == "scissors":
             self.computerButton["image"] = self.scissorsImage        
 
-        self.updateInfo(f"You play {playerMove}, the computer plays {computerMove}. {msg}", f"You have won {round(gameData[2] / gameData[0] * 100, 2)}% of games", f"You have lost {round(gameData[3] / gameData[0] * 100, 2)}% of games", f"You have drawn {round(gameData[1] / gameData[0] * 100, 2)}% of games", f"You have played {gameData[0]} games")
+        self.updateInfo(f"You play {playerMove}, the computer plays {computerMove}. {msg}", f"You have won {round(self.gameData[2] / self.gameData[0] * 100, 2)}% of games", f"You have lost {round(self.gameData[3] / self.gameData[0] * 100, 2)}% of games", f"You have drawn {round(self.gameData[1] / self.gameData[0] * 100, 2)}% of games", f"You have played {self.gameData[0]} games")
+
+        if self.gameData[0] == ROUNDS: 
+            MsgBox = messagebox.showinfo("Game Complete!", "Press <OK> to play again.")
+
+            #Dump the user data because it will be reset
+            dumpData(name, playerHistory=self.playerHistory, computerHistory=self.computerHistory, results=self.results)
+
+            self.root.destroy() #Destroy the windows
+            self.master.destroy()
+
+            firstRun = False
+
+            return      #This will return from the class and go back to line 335 (root.mainloop()), this restarts the loop and will re-initialize the classes
 
     def updateInfo(self, *lines):
         '''Update the info on the game info window
@@ -276,7 +294,7 @@ class Window(Frame):
         self.line4.destroy()
         self.line5.destroy()
 
-        self.line1 = Label(self.master, text=lines[0], font=("Courier", FONTSIZE), bg=BACKGROUND)
+        self.line1 = Label(self.master, text=lines[0], font=("Courier", FONTSIZE), bg=BACKGROUND)   #Update the lines
         self.line1.pack()
 
         self.line2 = Label(self.master, text=lines[1], font=("Courier", FONTSIZE), bg=BACKGROUND)
@@ -294,21 +312,24 @@ class Window(Frame):
 if __name__ == '__main__':
     #Main function that runs when you run the file
 
-    #RGB = lambda red, green, blue: "#%02x%02x%02x" % (red, green, blue)   #RGB to hex
+    #RGB = lambda red, green, blue: "#%02x%02x%02x" % (red, green, blue)   #RGB to hex converter
     config = readConfig("config.json")
-    WHITE = config["WHITE"]
-    RED = config["RED"]
-    YELLOW = config["YELLOW"]
-    GREEN = config["GREEN"]
+    LOSE = config["LOSE"]
+    DRAW = config["DRAW"]
+    WIN = config["WIN"]
     BACKGROUND = config["BACKGROUND"]
     HEIGHT = config["HEIGHT"]
     WIDTH = config["WIDTH"]
     TITLE = config["TITLE"]
     FONTSIZE = config["FONTSIZE"]
+    ROUNDS = config["ROUNDS"]
 
-    name = "guest"
-    gameData = [0, 0, 0, 0] #Stores: [total games, draws, wins, loses]
+    firstRun = True
 
-    root = Tk()
-    app = Window(root)
-    root.mainloop()  
+    while True:
+        if firstRun:
+            name = "guest"
+
+        root = Tk()
+        app = Window(root)
+        root.mainloop()  

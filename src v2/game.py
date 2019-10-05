@@ -10,7 +10,10 @@ from time import process_time
 from random import choices as rndchoice
 
 class setTimer(object):
-    '''Function to create a timer object'''
+    '''Function to create a timer object
+    
+    This is just interesting data on how the game is going
+    '''
 
     def __init__(self):
         self.startTime = 0
@@ -152,8 +155,8 @@ def calculateMove(name, playerHistory, computerHistory, results, sampleHistoryOn
     '''
 
     config = readConfig("config.json")
-    CHECK_RANGE = config["CHECK_RANGE"]     #Basically a difficulty setting (lower = easier)
-    PLAYER_WEIGHTING = config["PLAYER_WEIGHTING"]     #THe weighting for the user data compared to the input data (basically a multiplier)
+    CHECK_RANGE = config["CHECK_RANGE"]     #A difficulty setting (lower = easier), default is 3 (not recommended to increase it further than 5)
+    PLAYER_WEIGHTING = config["PLAYER_WEIGHTING"]     #THe weighting for the user data compared to the input data (a multiplier)
 
     if len(playerHistory) < CHECK_RANGE:   #If the history is blank (then we have no data) or under the check range
         #Pick a random option, this is weighted random because statistically, people play rock on the first turn. 
@@ -211,14 +214,14 @@ def calculateMove(name, playerHistory, computerHistory, results, sampleHistoryOn
     scissors = predictions.count(2)
     total = rock + paper + scissors #This if for calculating percentages
 
-    #Convert the totals to percentages (certainty)
     try: 
+        #Convert the totals to percentages (certainty)
         getPercent = lambda count, total: round((count / total) * 100, 2)  #Temp funct to get the percent
         rock = getPercent(rock, total)
         paper = getPercent(paper, total)
         scissors = getPercent(scissors, total)
 
-        print(f"Predictions: Rock: {rock}% | Paper: {paper}% | Scissors: {scissors}% | Data pulled from {total} samples")
+        print(f"Predictions: Rock: {rock}% | Paper: {paper}% | Scissors: {scissors}% | Data pulled from {total} samples")   #The percentage certainty of what it thinks the player is going to play
 
         close = lambda num1, num2, dif: abs(num1 - num2) <= dif
         DIFFERENCE = 2  #Difference between percentages for it to pick randomly
@@ -237,7 +240,7 @@ def calculateMove(name, playerHistory, computerHistory, results, sampleHistoryOn
             elif scissors > rock and scissors > paper:
                 return beats("scissors")
             else:
-                return rndmove()    #Incase something goes wrong
+                return rndmove()    #Incase they are all exactly the same
 
     except ZeroDivisionError:
         return rndmove()
