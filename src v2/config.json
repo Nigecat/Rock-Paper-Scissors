@@ -9,6 +9,22 @@
     "TITLE": "Rock-Paper-Scissors",
     "FONTSIZE": 12,
     "ROUNDS": 20,
+    "INPUT_DATA": ["data-input-three.json"],
+
+    "ICON": "icon.ico",
+    "BLANK": "blank.gif",
+    "ROCK": {
+        "MAIN": "rock.gif",
+        "REAL": "rock_real.gif"
+    },
+    "PAPER": {
+        "MAIN": "paper.gif",
+        "REAL": "paper_real.gif"
+    },
+    "SCISSORS": {
+        "MAIN": "scissors.gif",
+        "REAL": "scissors_real.gif"
+    },
 
     "CHECK_RANGE": 4,
     "PLAYER_WEIGHTING": 300,

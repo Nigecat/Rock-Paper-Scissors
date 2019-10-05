@@ -50,7 +50,7 @@ class Window(Frame):
         self.name = "guest"
         self.gameData = [0, 0, 0, 0] #Stores: [total games, draws, wins, loses]
         self.playerHistory, self.computerHistory, self.results = loadData(self.name)
-        data = sampleData(None, files=["data-input-one.json", "data-input-two.json"])
+        data = sampleData(None, files=CONFIG["INPUT_DATA"])
         self.sampleHistoryOne = data[0]
         self.sampleHistoryTwo = data[1]
         self.sampleResults = data[2]
@@ -69,15 +69,15 @@ class Window(Frame):
 
         self.master.title(f"{TITLE} | Logged in as: {self.name}")    #Setup the window
         self.root.configure(background=BACKGROUND)
-        self.root.geometry("{}x{}+0+0".format(WIDTH, HEIGHT))
-        self.root.iconbitmap(r'.\\images\\icon.ico')
+        self.root.geometry("{}x{}+0+0".format(CONFIG["WIDTH"], CONFIG["HEIGHT"]))
+        self.root.iconbitmap('.\\images\\{}'.format(CONFIG["ICON"]))
         self.root.resizable(0, 0) 
 
         #Load the images for the icons
-        self.blankImage = loadImage("blank.gif")
-        self.rockImage = loadImage("rock.gif")
-        self.paperImage = loadImage("paper.gif")
-        self.scissorsImage = loadImage("scissors.gif")
+        self.blankImage = loadImage(CONFIG["BLANK"])
+        self.rockImage = loadImage(CONFIG["ROCK"]["MAIN"])
+        self.paperImage = loadImage(CONFIG["PAPER"]["MAIN"])
+        self.scissorsImage = loadImage(CONFIG["SCISSORS"]["MAIN"])
 
         #These are all objects of self so I can referance them in other functions (these are the interface widgets)
         self.simpleImages = True
@@ -120,7 +120,7 @@ class Window(Frame):
         self.master = Tk()
         self.master.title(f"{TITLE} | Logged in as: {self.name}")
         self.master.configure(background=BACKGROUND)
-        self.master.geometry("600x150+{}+0".format(WIDTH + 1))
+        self.master.geometry("600x150+{}+0".format(CONFIG["WIDTH"] + 1))
         self.master.iconbitmap(r'.\\images\\icon.ico')
         self.master.resizable(0, 0) 
 
@@ -160,13 +160,13 @@ class Window(Frame):
         self.simpleImages = not self.simpleImages   #Toggle the simpleImages bool
 
         if self.simpleImages:       #Load the new images
-            self.rockImage = loadImage("rock.gif")
-            self.paperImage = loadImage("paper.gif")
-            self.scissorsImage = loadImage("scissors.gif")
+            self.rockImage = loadImage(CONFIG["ROCK"]["MAIN"])
+            self.paperImage = loadImage(CONFIG["PAPER"]["MAIN"])
+            self.scissorsImage = loadImage(CONFIG["SCISSORS"]["MAIN"])
         else:
-            self.rockImage = loadImage("rock_real.gif")
-            self.paperImage = loadImage("paper_real.gif")
-            self.scissorsImage = loadImage("scissors_real.gif")
+            self.rockImage = loadImage(CONFIG["ROCK"]["REAL"])
+            self.paperImage = loadImage(CONFIG["PAPER"]["REAL"])
+            self.scissorsImage = loadImage(CONFIG["SCISSORS"]["REAL"])
 
         #Re-create the buttons
         self.rockButton = Button(self.root, image=self.rockImage, text="Rock", bg=BACKGROUND, command=lambda : self.play("rock"))
@@ -236,20 +236,20 @@ class Window(Frame):
             self.gameData[1] += 1    #Draw
             msg = "Draw!"
             self.results.append(0)  #Update the storage var 
-            self.filler["background"] = DRAW  #Change colour of the square in the middle on the bottom row
-            self.root.configure(background=DRAW)         #Corrosponding to the game result
+            self.filler["background"] = CONFIG["DRAW"]  #Change colour of the square in the middle on the bottom row
+            self.root.configure(background=CONFIG["DRAW"])         #Corrosponding to the game result
         elif beats(playerMove) != computerMove:
             self.gameData[2] += 1    #Win
             msg = "You win!"
             self.results.append(2)
-            self.filler["background"] = WIN
-            self.root.configure(background=WIN)
+            self.filler["background"] = CONFIG["WIN"]
+            self.root.configure(background=CONFIG["WIN"])
         else:
             self.gameData[3] += 1    #Lose
             msg = "You lose..."
             self.results.append(1)
-            self.filler["background"] = LOSE
-            self.root.configure(background=LOSE)
+            self.filler["background"] = CONFIG["LOSE"]
+            self.root.configure(background=CONFIG["LOSE"])
 
         if playerMove == "rock":    #Set the images that show who played what
             self.playerButton["image"] = self.rockImage
@@ -267,7 +267,7 @@ class Window(Frame):
 
         self.updateInfo(f"You play {playerMove}, the computer plays {computerMove}. {msg}", f"You have won {round(self.gameData[2] / self.gameData[0] * 100, 2)}% of games", f"You have lost {round(self.gameData[3] / self.gameData[0] * 100, 2)}% of games", f"You have drawn {round(self.gameData[1] / self.gameData[0] * 100, 2)}% of games", f"You have played {self.gameData[0]} games")
 
-        if self.gameData[0] == ROUNDS: 
+        if self.gameData[0] == CONFIG["ROUNDS"]: 
             MsgBox = messagebox.showinfo("Game Complete!", "Press <OK> to play again.")
 
             #Dump the user data because it will be reset
@@ -312,16 +312,10 @@ if __name__ == '__main__':
     #Main function that runs when you run the file
 
     #RGB = lambda red, green, blue: "#%02x%02x%02x" % (red, green, blue)   #RGB to hex converter
-    config = readConfig("config.json")
-    LOSE = config["LOSE"]
-    DRAW = config["DRAW"]
-    WIN = config["WIN"]
-    BACKGROUND = config["BACKGROUND"]
-    HEIGHT = config["HEIGHT"]
-    WIDTH = config["WIDTH"]
-    TITLE = config["TITLE"]
-    FONTSIZE = config["FONTSIZE"]
-    ROUNDS = config["ROUNDS"]
+    CONFIG = readConfig("config.json")          #Read config file
+    TITLE = CONFIG["TITLE"]
+    BACKGROUND = CONFIG["BACKGROUND"]
+    FONTSIZE = CONFIG["FONTSIZE"]
 
     firstRun = True
     name = None
