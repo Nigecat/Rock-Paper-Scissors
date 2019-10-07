@@ -9,7 +9,7 @@
     "TITLE": "Rock-Paper-Scissors",
     "FONTSIZE": 12,
     "ROUNDS": 20,
-    "INPUT_DATA": ["data-input-three.json"],
+    "INPUT_DATA": ["data-input-one.json", "data-input-two.json"],
 
     "ICON": "icon.ico",
     "BLANK": "blank.gif",
@@ -26,7 +26,7 @@
         "REAL": "scissors_real.gif"
     },
 
-    "CHECK_RANGE": 4,
-    "PLAYER_WEIGHTING": 300,
+    "CHECK_RANGE": 3,
+    "PLAYER_WEIGHTING": 250,
     "DIFFERENCE": 2
 }
