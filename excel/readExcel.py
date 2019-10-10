@@ -25,10 +25,10 @@ playerTwo = dt["player_two_throw"]
 print("Formatting data...")
 
 print("     (player one)")
-playerOne = [x - 1 if x != 0 else choice([0, 1, 2]) for x in playerOne]
+playerOne = [x - 1 if x != 0 for x in playerOne]
 
 print("     (player two)")
-playerTwo = [x - 1 if x != 0 else choice([0, 1, 2]) for x in playerTwo]
+playerTwo = [x - 1 if x != 0 for x in playerTwo]
 
 print("     (results)")
 results = []
